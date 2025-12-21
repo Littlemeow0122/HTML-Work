@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <title>木魚動畫</title>
+  <style>
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      background: #fff8e7;
+      font-family: "Microsoft JhengHei", sans-serif;
+    }
+
+    .container {
+      position: relative;
+      width: 300px;
+      height: 200px;
+    }
+
+    .muyu {
+      width: 150px;
+      height: 120px;
+      background: #dcae74;
+      border-radius: 50% / 40%;
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      box-shadow: inset -10px -10px #b07d4f;
+      cursor: pointer;
+    }
+
+    .muyu::before {
+      content: "";
+      width: 60px;
+      height: 15px;
+      background: #b07d4f;
+      border-radius: 10px;
+      position: absolute;
+      top: 40%;
+      left: 30%;
+    }
+
+    .hit {
+      animation: shake 0.15s;
+    }
+
+    @keyframes shake {
+      0% { transform: translateX(-50%) rotate(0deg); }
+      50% { transform: translateX(-50%) rotate(5deg); }
+      100% { transform: translateX(-50%) rotate(0deg); }
+    }
+
+    .counter {
+      margin-top: 15px;
+      font-size: 22px;
+      font-weight: bold;
+      color: #444;
+    }
+
+    .controls {
+      margin-top: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    button {
+      padding: 8px 16px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="muyu" id="muyu"></div>
+  </div>
+
+  <div class="counter" id="counter"></div>
+
+  <div class="controls">
+    <button id="toggleBtn">點擊切換功德 +1</button>
+    <button id="clearBtn">清空目前紀錄</button>
+  </div>
+
+  <audio id="sound" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_4c029e2f74.mp3?filename=wood-block-hit-100bpm-14095.mp3"></audio>
+
+  <script>
+    const muyu = document.getElementById("muyu");
+    const counter = document.getElementById("counter");
+    const sound = document.getElementById("sound");
+    const toggleBtn = document.getElementById("toggleBtn");
+    const clearBtn = document.getElementById("clearBtn");
+
+    let mode = "plus"; // plus | minus
+
+    let plusCount = Number(localStorage.getItem("plusCount")) || 0;
+    let minusCount = Number(localStorage.getItem("minusCount")) || 0;
+
+    function hit() {
+      muyu.classList.add("hit");
+      setTimeout(() => muyu.classList.remove("hit"), 150);
+      sound.currentTime = 0;
+      sound.play();
+    }
+
+    function updateUI() {
+      counter.textContent =
+        mode === "plus" ? `功德：${plusCount}` : `功德：${minusCount}`;
+
+      toggleBtn.textContent =
+        mode === "plus"
+          ? "點擊切換功德 -1"
+          : "點擊切換功德 +1";
+    }
+
+    muyu.addEventListener("click", () => {
+      hit();
+      if (mode === "plus") {
+        plusCount++;
+        localStorage.setItem("plusCount", plusCount);
+      } else {
+        minusCount--;
+        localStorage.setItem("minusCount", minusCount);
+      }
+      updateUI();
+    });
+
+    toggleBtn.onclick = () => {
+      mode = mode === "plus" ? "minus" : "plus";
+      updateUI();
+    };
+
+    clearBtn.onclick = () => {
+      const modeText = mode === "plus" ? "功德 +1" : "功德 -1";
+      if (!confirm(`確定要清空「${modeText}」的紀錄嗎？`)) return;
+
+      if (mode === "plus") {
+        plusCount = 0;
+        localStorage.removeItem("plusCount");
+      } else {
+        minusCount = 0;
+        localStorage.removeItem("minusCount");
+      }
+      updateUI();
+    };
+
+    updateUI();
+  </script>
+
+</body>
+</html>
