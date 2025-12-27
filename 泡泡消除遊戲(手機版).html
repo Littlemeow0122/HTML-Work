@@ -1,8 +1,7 @@
-<!doctype html>
-<html lang="zh-TW" class="h-full">
- <head>
+<!DOCTYPE html>
+<html lang="zh-TW" class="h-full"><head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>泡泡消除遊戲</title>
   <script src="/_sdk/element_sdk.js"></script>
   <script src="/_sdk/data_sdk.js"></script>
@@ -13,8 +12,8 @@
     }
     
     .bubble {
-      width: 50px;
-      height: 50px;
+      width: 100%;
+      aspect-ratio: 1;
       border-radius: 50%;
       cursor: pointer;
       transition: transform 0.2s, opacity 0.3s;
@@ -22,13 +21,6 @@
       box-shadow: inset -5px -5px 10px rgba(0, 0, 0, 0.1),
                   inset 5px 5px 10px rgba(255, 255, 255, 0.3),
                   0 4px 8px rgba(0, 0, 0, 0.2);
-    }
-    
-    @media (max-width: 640px) {
-      .bubble {
-        width: 40px;
-        height: 40px;
-      }
     }
     
     .bubble:hover {
@@ -170,7 +162,7 @@
       
       if (gameState.score > highScore) {
         if (savedData.length >= 999) {
-          showMessage("已達到最大儲存限制 (999 筆記錄)");
+          showMessage("已達到����大儲存限制 (999 筆記錄)");
           gameState.isLoading = false;
           render();
           return;
@@ -373,34 +365,34 @@
       app.style.fontFamily = `${config.font_family}, sans-serif`;
       
       app.innerHTML = `
-        <div style="max-width: 600px; margin: 0 auto; padding: 2rem;">
-          <h1 style="font-size: 2.5rem; font-weight: bold; text-align: center; margin-bottom: 2rem; color: ${config.surface_color};">${config.game_title}</h1>
+        <div style="max-width: 600px; margin: 0 auto; padding: 1rem;">
+          <h1 style="font-size: 2rem; font-weight: bold; text-align: center; margin-bottom: 1.5rem; color: ${config.surface_color};">${config.game_title}</h1>
           
-          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 2rem;">
-            <div style="background-color: ${config.surface_color}; padding: 1.5rem; border-radius: 1rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); text-align: center;">
-              <div style="font-size: 0.875rem; color: ${config.text_color}; opacity: 0.7; margin-bottom: 0.5rem;">${config.score_label}</div>
-              <div style="font-size: 2rem; font-weight: bold; color: ${config.primary_action_color};">${gameState.score}</div>
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; margin-bottom: 1.5rem;">
+            <div style="background-color: ${config.surface_color}; padding: 1rem; border-radius: 1rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); text-align: center;">
+              <div style="font-size: 0.75rem; color: ${config.text_color}; opacity: 0.7; margin-bottom: 0.25rem;">${config.score_label}</div>
+              <div style="font-size: 1.5rem; font-weight: bold; color: ${config.primary_action_color};">${gameState.score}</div>
             </div>
             
-            <div style="background-color: ${config.surface_color}; padding: 1.5rem; border-radius: 1rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); text-align: center;">
-              <div style="font-size: 0.875rem; color: ${config.text_color}; opacity: 0.7; margin-bottom: 0.5rem;">${config.moves_label}</div>
-              <div style="font-size: 2rem; font-weight: bold; color: ${config.secondary_action_color};">${gameState.moves}</div>
+            <div style="background-color: ${config.surface_color}; padding: 1rem; border-radius: 1rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); text-align: center;">
+              <div style="font-size: 0.75rem; color: ${config.text_color}; opacity: 0.7; margin-bottom: 0.25rem;">${config.moves_label}</div>
+              <div style="font-size: 1.5rem; font-weight: bold; color: ${config.secondary_action_color};">${gameState.moves}</div>
             </div>
             
-            <div style="background-color: ${config.surface_color}; padding: 1.5rem; border-radius: 1rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); text-align: center;">
-              <div style="font-size: 0.875rem; color: ${config.text_color}; opacity: 0.7; margin-bottom: 0.5rem;">${config.high_score_label}</div>
-              <div style="font-size: 2rem; font-weight: bold; color: #f59e0b;">${highScore}</div>
+            <div style="background-color: ${config.surface_color}; padding: 1rem; border-radius: 1rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); text-align: center;">
+              <div style="font-size: 0.75rem; color: ${config.text_color}; opacity: 0.7; margin-bottom: 0.25rem;">${config.high_score_label}</div>
+              <div style="font-size: 1.5rem; font-weight: bold; color: #f59e0b;">${highScore}</div>
             </div>
           </div>
           
-          <div style="background-color: ${config.surface_color}; padding: 2rem; border-radius: 1rem; box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1); margin-bottom: 2rem;">
-            <div style="display: grid; grid-template-columns: repeat(8, 50px); gap: 8px; justify-content: center;" id="game-grid"></div>
+          <div style="background-color: ${config.surface_color}; padding: 1.5rem; border-radius: 1rem; box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1); margin-bottom: 2rem; overflow: hidden;">
+            <div style="display: grid; grid-template-columns: repeat(8, 1fr); gap: 0.5rem; width: 100%; max-width: 500px; margin: 0 auto;" id="game-grid"></div>
           </div>
           
-          <div style="display: flex; gap: 1rem; justify-content: center;">
-            <button id="restart-btn" style="padding: 1rem 2rem; font-size: 1rem; font-weight: 600; border-radius: 0.75rem; background-color: ${config.primary_action_color}; color: white; border: none; cursor: pointer; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); transition: transform 0.2s; ${gameState.isLoading ? 'opacity: 0.5; cursor: not-allowed;' : ''}" ${gameState.isLoading ? 'disabled' : ''}>${config.restart_button}</button>
+          <div style="display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap;">
+            <button id="restart-btn" style="padding: 0.75rem 1.5rem; font-size: 0.95rem; font-weight: 600; border-radius: 0.75rem; background-color: ${config.primary_action_color}; color: white; border: none; cursor: pointer; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); transition: transform 0.2s; ${gameState.isLoading ? 'opacity: 0.5; cursor: not-allowed;' : ''}" ${gameState.isLoading ? 'disabled' : ''}>${config.restart_button}</button>
             
-            <button id="reset-btn" style="padding: 1rem 2rem; font-size: 1rem; font-weight: 600; border-radius: 0.75rem; background-color: ${config.secondary_action_color}; color: white; border: none; cursor: pointer; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); transition: transform 0.2s; ${gameState.isLoading || savedData.length === 0 ? 'opacity: 0.5; cursor: not-allowed;' : ''}" ${gameState.isLoading || savedData.length === 0 ? 'disabled' : ''}>${config.reset_button}</button>
+            <button id="reset-btn" style="padding: 0.75rem 1.5rem; font-size: 0.95rem; font-weight: 600; border-radius: 0.75rem; background-color: ${config.secondary_action_color}; color: white; border: none; cursor: pointer; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); transition: transform 0.2s; ${gameState.isLoading || savedData.length === 0 ? 'opacity: 0.5; cursor: not-allowed;' : ''}" ${gameState.isLoading || savedData.length === 0 ? 'disabled' : ''}>${config.reset_button}</button>
           </div>
         </div>
       `;
@@ -557,5 +549,5 @@
 
     init();
   </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9b45a3b7721ff1e0',t:'MTc2NjgwNTE4MC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
-</html>
+ 
+</body></html>
