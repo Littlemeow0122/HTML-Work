@@ -1,5 +1,6 @@
-<!DOCTYPE html>
-<html lang="zh-TW" class="h-full"><head>
+<!doctype html>
+<html lang="zh-TW" class="h-full">
+ <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>泡泡消除遊戲</title>
@@ -24,7 +25,7 @@
     }
     
     .bubble:hover {
-      transform: scale(1.1);
+      transform: scale(1.06);
     }
     
     .bubble.selected {
@@ -93,8 +94,6 @@
       box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
     }
   </style>
-  <style>@view-transition { navigation: auto; }</style>
-  <style>@view-transition { navigation: auto; }</style>
  </head>
  <body class="h-full">
   <div id="app" class="w-full h-full flex flex-col overflow-auto"></div>
@@ -124,8 +123,6 @@
     };
 
     let savedData = [];
-    let currentGameRecord = null;
-
     const GRID_SIZE = 8;
     const COLORS = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8', '#F7DC6F'];
 
@@ -139,9 +136,7 @@
     async function initDataSDK() {
       if (window.dataSdk) {
         const result = await window.dataSdk.init(dataHandler);
-        if (!result.isOk) {
-          console.error("Failed to initialize data SDK");
-        }
+        if (!result.isOk) console.error("Failed to initialize data SDK");
       }
     }
 
@@ -151,31 +146,23 @@
     }
 
     async function saveScore() {
-      if (!window.dataSdk) return;
-      
-      if (gameState.score === 0) return;
-
+      if (!window.dataSdk || gameState.score === 0) return;
       gameState.isLoading = true;
       render();
 
       const highScore = getHighScore();
-      
       if (gameState.score > highScore) {
         if (savedData.length >= 999) {
-          showMessage("已達到����大儲存限制 (999 筆記錄)");
+          showMessage("已達到最大儲存限制 (999 筆記錄)");
           gameState.isLoading = false;
           render();
           return;
         }
-
         const result = await window.dataSdk.create({
           high_score: gameState.score,
           timestamp: new Date().toISOString()
         });
-
-        if (!result.isOk) {
-          showMessage("儲存分數時發生錯誤");
-        }
+        if (!result.isOk) showMessage("儲存分數時發生錯誤");
       }
 
       gameState.isLoading = false;
@@ -184,14 +171,9 @@
 
     async function resetHighScore() {
       if (!window.dataSdk || savedData.length === 0) return;
-
       gameState.isLoading = true;
       render();
-
-      for (const record of savedData) {
-        await window.dataSdk.delete(record);
-      }
-
+      for (const record of savedData) await window.dataSdk.delete(record);
       gameState.isLoading = false;
       render();
     }
@@ -199,10 +181,9 @@
     function showMessage(message) {
       const messageEl = document.createElement('div');
       messageEl.className = 'fixed top-4 left-1/2 transform -translate-x-1/2 bg-white px-6 py-3 rounded-lg shadow-lg z-50';
-      messageEl.style.color = window.elementSdk?.config?.text_color || defaultConfig.text_color;
+      messageEl.style.color = defaultConfig.text_color;
       messageEl.textContent = message;
       document.body.appendChild(messageEl);
-      
       setTimeout(() => {
         messageEl.style.transition = 'opacity 0.3s';
         messageEl.style.opacity = '0';
@@ -229,38 +210,26 @@
 
     function findConnectedBubbles(row, col, color, visited = new Set()) {
       const key = `${row}-${col}`;
-      
       if (visited.has(key)) return [];
       if (row < 0 || row >= GRID_SIZE || col < 0 || col >= GRID_SIZE) return [];
       if (!gameState.grid[row] || !gameState.grid[row][col]) return [];
       if (gameState.grid[row][col].color !== color) return [];
-      
       visited.add(key);
       const connected = [{ row, col }];
-      
-      const directions = [[0, 1], [1, 0], [0, -1], [-1, 0]];
-      for (const [dr, dc] of directions) {
-        connected.push(...findConnectedBubbles(row + dr, col + dc, color, visited));
-      }
-      
+      const directions = [[0, 1],[1,0],[0,-1],[-1,0]];
+      for (const [dr, dc] of directions) connected.push(...findConnectedBubbles(row+dr, col+dc, color, visited));
       return connected;
     }
 
     function handleBubbleClick(row, col) {
       if (gameState.isLoading) return;
-      
       const bubble = gameState.grid[row][col];
       if (!bubble) return;
-      
       const connected = findConnectedBubbles(row, col, bubble.color);
-      
       if (connected.length >= 2) {
         gameState.selectedBubbles = connected;
         render();
-        
-        setTimeout(() => {
-          removeBubbles(connected);
-        }, 500);
+        setTimeout(() => removeBubbles(connected), 500);
       }
     }
 
@@ -268,20 +237,14 @@
       const points = bubbles.length * 10;
       gameState.score += points;
       gameState.moves++;
-      
       const firstBubble = bubbles[0];
       const bubbleEl = document.querySelector(`[data-row="${firstBubble.row}"][data-col="${firstBubble.col}"]`);
       if (bubbleEl) {
         const rect = bubbleEl.getBoundingClientRect();
         showScorePop(points, rect.left + rect.width / 2, rect.top);
       }
-      
-      bubbles.forEach(({ row, col }) => {
-        gameState.grid[row][col] = null;
-      });
-      
+      bubbles.forEach(({ row, col }) => gameState.grid[row][col] = null);
       gameState.selectedBubbles = [];
-      
       applyGravity();
       saveScore();
       render();
@@ -290,7 +253,6 @@
     function applyGravity() {
       for (let col = 0; col < GRID_SIZE; col++) {
         let emptyRow = GRID_SIZE - 1;
-        
         for (let row = GRID_SIZE - 1; row >= 0; row--) {
           if (gameState.grid[row][col] !== null) {
             if (row !== emptyRow) {
@@ -301,13 +263,8 @@
             emptyRow--;
           }
         }
-        
         for (let row = emptyRow; row >= 0; row--) {
-          gameState.grid[row][col] = {
-            color: COLORS[Math.floor(Math.random() * COLORS.length)],
-            row: row,
-            col: col
-          };
+          gameState.grid[row][col] = { color: COLORS[Math.floor(Math.random() * COLORS.length)], row, col };
         }
       }
     }
@@ -318,236 +275,103 @@
       scoreEl.textContent = `+${points}`;
       scoreEl.style.left = `${x}px`;
       scoreEl.style.top = `${y}px`;
-      scoreEl.style.color = window.elementSdk?.config?.primary_action_color || defaultConfig.primary_action_color;
+      scoreEl.style.color = defaultConfig.primary_action_color;
       document.body.appendChild(scoreEl);
-      
       setTimeout(() => scoreEl.remove(), 1000);
     }
 
-    function restartGame() {
-      initGrid();
-      render();
-    }
+    function restartGame() { initGrid(); render(); }
 
     function showResetModal() {
       const modal = document.createElement('div');
       modal.className = 'modal-backdrop';
       modal.innerHTML = `
         <div class="modal-content">
-          <h2 style="font-size: 1.5rem; font-weight: bold; margin-bottom: 1rem; color: ${window.elementSdk?.config?.text_color || defaultConfig.text_color};">確認重置</h2>
-          <p style="margin-bottom: 1.5rem; color: ${window.elementSdk?.config?.text_color || defaultConfig.text_color};">確定要重置最高分記錄嗎？此操作無法復原。</p>
+          <h2 style="font-size: 1.5rem; font-weight: bold; margin-bottom: 1rem;">確認重置</h2>
+          <p style="margin-bottom: 1.5rem;">確定要重置最高分記錄嗎？此操作無法復原。</p>
           <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
-            <button id="cancel-reset" style="padding: 0.5rem 1rem; border-radius: 0.5rem; background-color: ${window.elementSdk?.config?.surface_color || defaultConfig.surface_color}; color: ${window.elementSdk?.config?.text_color || defaultConfig.text_color}; border: 2px solid ${window.elementSdk?.config?.secondary_action_color || defaultConfig.secondary_action_color}; cursor: pointer;">取消</button>
+            <button id="cancel-reset" style="padding: 0.5rem 1rem; border-radius: 0.5rem; background-color: ${defaultConfig.surface_color}; color: ${defaultConfig.text_color}; border: 2px solid ${defaultConfig.secondary_action_color}; cursor: pointer;">取消</button>
             <button id="confirm-reset" style="padding: 0.5rem 1rem; border-radius: 0.5rem; background-color: #ef4444; color: white; border: none; cursor: pointer;">確認重置</button>
           </div>
-        </div>
-      `;
-      
+        </div>`;
       document.body.appendChild(modal);
-      
       document.getElementById('cancel-reset').onclick = () => modal.remove();
-      document.getElementById('confirm-reset').onclick = async () => {
-        modal.remove();
-        await resetHighScore();
-      };
-      
-      modal.onclick = (e) => {
-        if (e.target === modal) modal.remove();
-      };
+      document.getElementById('confirm-reset').onclick = async () => { modal.remove(); await resetHighScore(); };
+      modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
     }
 
     function render() {
-      const config = window.elementSdk?.config || defaultConfig;
+      const config = defaultConfig;
       const app = document.getElementById('app');
       const highScore = getHighScore();
-      
       app.style.backgroundColor = config.background_color;
       app.style.fontFamily = `${config.font_family}, sans-serif`;
-      
+
       app.innerHTML = `
         <div style="max-width: 600px; margin: 0 auto; padding: 1rem;">
           <h1 style="font-size: 2rem; font-weight: bold; text-align: center; margin-bottom: 1.5rem; color: ${config.surface_color};">${config.game_title}</h1>
           
           <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; margin-bottom: 1.5rem;">
-            <div style="background-color: ${config.surface_color}; padding: 1rem; border-radius: 1rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); text-align: center;">
-              <div style="font-size: 0.75rem; color: ${config.text_color}; opacity: 0.7; margin-bottom: 0.25rem;">${config.score_label}</div>
-              <div style="font-size: 1.5rem; font-weight: bold; color: ${config.primary_action_color};">${gameState.score}</div>
+            <div style="background-color: ${config.surface_color}; padding: 1rem; border-radius: 1rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align:center;">
+              <div style="font-size:0.75rem;color:${config.text_color};opacity:0.7;margin-bottom:0.25rem;">${config.score_label}</div>
+              <div style="font-size:1.5rem;font-weight:bold;color:${config.primary_action_color};">${gameState.score}</div>
             </div>
-            
-            <div style="background-color: ${config.surface_color}; padding: 1rem; border-radius: 1rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); text-align: center;">
-              <div style="font-size: 0.75rem; color: ${config.text_color}; opacity: 0.7; margin-bottom: 0.25rem;">${config.moves_label}</div>
-              <div style="font-size: 1.5rem; font-weight: bold; color: ${config.secondary_action_color};">${gameState.moves}</div>
+            <div style="background-color: ${config.surface_color}; padding: 1rem; border-radius: 1rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align:center;">
+              <div style="font-size:0.75rem;color:${config.text_color};opacity:0.7;margin-bottom:0.25rem;">${config.moves_label}</div>
+              <div style="font-size:1.5rem;font-weight:bold;color:${config.secondary_action_color};">${gameState.moves}</div>
             </div>
-            
-            <div style="background-color: ${config.surface_color}; padding: 1rem; border-radius: 1rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); text-align: center;">
-              <div style="font-size: 0.75rem; color: ${config.text_color}; opacity: 0.7; margin-bottom: 0.25rem;">${config.high_score_label}</div>
-              <div style="font-size: 1.5rem; font-weight: bold; color: #f59e0b;">${highScore}</div>
+            <div style="background-color: ${config.surface_color}; padding: 1rem; border-radius: 1rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align:center;">
+              <div style="font-size:0.75rem;color:${config.text_color};opacity:0.7;margin-bottom:0.25rem;">${config.high_score_label}</div>
+              <div style="font-size:1.5rem;font-weight:bold;color:#f59e0b;">${highScore}</div>
             </div>
           </div>
           
-          <div style="background-color: ${config.surface_color}; padding: 1.5rem; border-radius: 1rem; box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1); margin-bottom: 2rem; overflow: hidden;">
-            <div style="display: grid; grid-template-columns: repeat(8, 1fr); gap: 0.5rem; width: 100%; max-width: 500px; margin: 0 auto;" id="game-grid"></div>
+          <div style="background-color: ${config.surface_color}; padding: 1.5rem; border-radius: 1rem; box-shadow:0 10px 15px rgba(0,0,0,0.1); margin-bottom:2rem; overflow:hidden;">
+            <div style="display:grid; grid-template-columns:repeat(8,1fr); gap:0.65rem; width:100%; max-width:min(92vw,580px); margin:0 auto;" id="game-grid"></div>
           </div>
           
-          <div style="display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap;">
-            <button id="restart-btn" style="padding: 0.75rem 1.5rem; font-size: 0.95rem; font-weight: 600; border-radius: 0.75rem; background-color: ${config.primary_action_color}; color: white; border: none; cursor: pointer; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); transition: transform 0.2s; ${gameState.isLoading ? 'opacity: 0.5; cursor: not-allowed;' : ''}" ${gameState.isLoading ? 'disabled' : ''}>${config.restart_button}</button>
-            
-            <button id="reset-btn" style="padding: 0.75rem 1.5rem; font-size: 0.95rem; font-weight: 600; border-radius: 0.75rem; background-color: ${config.secondary_action_color}; color: white; border: none; cursor: pointer; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); transition: transform 0.2s; ${gameState.isLoading || savedData.length === 0 ? 'opacity: 0.5; cursor: not-allowed;' : ''}" ${gameState.isLoading || savedData.length === 0 ? 'disabled' : ''}>${config.reset_button}</button>
+          <div style="display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap;">
+            <button id="restart-btn" style="padding:0.75rem 1.5rem; font-size:0.95rem; font-weight:600; border-radius:0.75rem; background-color:${config.primary_action_color}; color:white; border:none; cursor:pointer; box-shadow:0 4px 6px rgba(0,0,0,0.1); transition: transform 0.2s;">${config.restart_button}</button>
+            <button id="reset-btn" style="padding:0.75rem 1.5rem; font-size:0.95rem; font-weight:600; border-radius:0.75rem; background-color:${config.secondary_action_color}; color:white; border:none; cursor:pointer; box-shadow:0 4px 6px rgba(0,0,0,0.1); transition: transform 0.2s;">${config.reset_button}</button>
           </div>
         </div>
       `;
-      
+
       const gridEl = document.getElementById('game-grid');
-      
-      for (let i = 0; i < GRID_SIZE; i++) {
-        for (let j = 0; j < GRID_SIZE; j++) {
+      for (let i=0;i<GRID_SIZE;i++){
+        for (let j=0;j<GRID_SIZE;j++){
           const bubble = gameState.grid[i][j];
-          if (bubble) {
+          if(bubble){
             const bubbleEl = document.createElement('div');
-            bubbleEl.className = 'bubble';
-            bubbleEl.style.backgroundColor = bubble.color;
-            bubbleEl.setAttribute('data-row', i);
-            bubbleEl.setAttribute('data-col', j);
-            
-            const isSelected = gameState.selectedBubbles.some(
-              b => b.row === i && b.col === j
-            );
-            if (isSelected) {
-              bubbleEl.classList.add('selected');
-            }
-            
-            bubbleEl.onclick = () => handleBubbleClick(i, j);
+            bubbleEl.className='bubble';
+            bubbleEl.style.backgroundColor=bubble.color;
+            bubbleEl.setAttribute('data-row',i);
+            bubbleEl.setAttribute('data-col',j);
+            if(gameState.selectedBubbles.some(b=>b.row===i&&b.col===j)) bubbleEl.classList.add('selected');
+            bubbleEl.onclick=()=>handleBubbleClick(i,j);
             gridEl.appendChild(bubbleEl);
           }
         }
       }
-      
+
       const restartBtn = document.getElementById('restart-btn');
-      if (restartBtn && !gameState.isLoading) {
-        restartBtn.onmouseenter = () => {
-          restartBtn.style.transform = 'scale(1.05)';
-        };
-        restartBtn.onmouseleave = () => {
-          restartBtn.style.transform = 'scale(1)';
-        };
-        restartBtn.onclick = restartGame;
-      }
-      
+      restartBtn.onmouseenter=()=>restartBtn.style.transform='scale(1.05)';
+      restartBtn.onmouseleave=()=>restartBtn.style.transform='scale(1)';
+      restartBtn.onclick=restartGame;
+
       const resetBtn = document.getElementById('reset-btn');
-      if (resetBtn && !gameState.isLoading && savedData.length > 0) {
-        resetBtn.onmouseenter = () => {
-          resetBtn.style.transform = 'scale(1.05)';
-        };
-        resetBtn.onmouseleave = () => {
-          resetBtn.style.transform = 'scale(1)';
-        };
-        resetBtn.onclick = showResetModal;
-      }
-    }
-
-    async function onConfigChange(config) {
-      render();
-    }
-
-    function mapToCapabilities(config) {
-      return {
-        recolorables: [
-          {
-            get: () => config.background_color || defaultConfig.background_color,
-            set: (value) => {
-              config.background_color = value;
-              if (window.elementSdk) {
-                window.elementSdk.setConfig({ background_color: value });
-              }
-            }
-          },
-          {
-            get: () => config.surface_color || defaultConfig.surface_color,
-            set: (value) => {
-              config.surface_color = value;
-              if (window.elementSdk) {
-                window.elementSdk.setConfig({ surface_color: value });
-              }
-            }
-          },
-          {
-            get: () => config.text_color || defaultConfig.text_color,
-            set: (value) => {
-              config.text_color = value;
-              if (window.elementSdk) {
-                window.elementSdk.setConfig({ text_color: value });
-              }
-            }
-          },
-          {
-            get: () => config.primary_action_color || defaultConfig.primary_action_color,
-            set: (value) => {
-              config.primary_action_color = value;
-              if (window.elementSdk) {
-                window.elementSdk.setConfig({ primary_action_color: value });
-              }
-            }
-          },
-          {
-            get: () => config.secondary_action_color || defaultConfig.secondary_action_color,
-            set: (value) => {
-              config.secondary_action_color = value;
-              if (window.elementSdk) {
-                window.elementSdk.setConfig({ secondary_action_color: value });
-              }
-            }
-          }
-        ],
-        borderables: [],
-        fontEditable: {
-          get: () => config.font_family || defaultConfig.font_family,
-          set: (value) => {
-            config.font_family = value;
-            if (window.elementSdk) {
-              window.elementSdk.setConfig({ font_family: value });
-            }
-          }
-        },
-        fontSizeable: {
-          get: () => config.font_size || defaultConfig.font_size,
-          set: (value) => {
-            config.font_size = value;
-            if (window.elementSdk) {
-              window.elementSdk.setConfig({ font_size: value });
-            }
-          }
-        }
-      };
-    }
-
-    function mapToEditPanelValues(config) {
-      return new Map([
-        ["game_title", config.game_title || defaultConfig.game_title],
-        ["score_label", config.score_label || defaultConfig.score_label],
-        ["moves_label", config.moves_label || defaultConfig.moves_label],
-        ["high_score_label", config.high_score_label || defaultConfig.high_score_label],
-        ["restart_button", config.restart_button || defaultConfig.restart_button],
-        ["reset_button", config.reset_button || defaultConfig.reset_button]
-      ]);
+      resetBtn.onmouseenter=()=>resetBtn.style.transform='scale(1.05)';
+      resetBtn.onmouseleave=()=>resetBtn.style.transform='scale(1)';
+      resetBtn.onclick=showResetModal;
     }
 
     async function init() {
       await initDataSDK();
-      
-      if (window.elementSdk) {
-        window.elementSdk.init({
-          defaultConfig,
-          onConfigChange,
-          mapToCapabilities,
-          mapToEditPanelValues
-        });
-      }
-      
       initGrid();
       render();
     }
 
     init();
   </script>
- 
-</body></html>
+ </body>
+</html>
