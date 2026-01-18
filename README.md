@@ -2,7 +2,7 @@
 [Littlemeow0122/HTML-Work](https://github.com/Littlemeow0122/HTML-Work/tree/main)  
 * `創建日期: 2025/12/15`
 * `更新日期: 2025/12/27`
-* `版本: 3.0`
+* `版本: 3.5`
   
 [README.md](https://raw.githack.com/Littlemeow0122/HTML-Work/refs/heads/main/README.md.html)
 
@@ -17,6 +17,7 @@
 `2.0` : 將「`高質感QRCode產生器.html`」加入下載區 [↓](https://github.com/Littlemeow0122/HTML-Work/releases/tag/2.0)  
 `2.5` : 新增「`Scratch專案載入器.html`」[查看](https://github.com/Littlemeow0122/HTML-Work/blob/main/README.md#scratch%E5%B0%88%E6%A1%88%E8%BC%89%E5%85%A5%E5%99%A8html)  
 `3.0` : 將「`Scratch專案載入器.html`」加入下載區 [↓](https://github.com/Littlemeow0122/HTML-Work/releases/tag/3.0)
+`3.5` : 新增「`ASMR鍵盤.html`」[查看](https://raw.githack.com/Littlemeow0122/HTML-Work/refs/heads/main/ASMR鍵盤.html)
 
 ---
  # HTML Work
@@ -54,6 +55,8 @@
 >**URL**: https://raw.githack.com/Littlemeow0122/HTML-Work/refs/heads/main/%E9%AB%98%E8%B3%AA%E6%84%9FQRCode%E7%94%A2%E7%94%9F%E5%99%A8.html
 # Scratch專案載入器.html
 >**URL**: https://raw.githack.com/Littlemeow0122/HTML-Work/refs/heads/main/Scratch%E5%B0%88%E6%A1%88%E8%BC%89%E5%85%A5%E5%99%A8.html
+# ASMR鍵盤
+>**URL**: https://raw.githack.com/Littlemeow0122/HTML-Work/refs/heads/main/ASMR鍵盤.html
 
 ---
 
