@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="zh-TW" class="h-full"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ASMR Keyboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&amp;display=swap" rel="stylesheet">
+  <style>
+    body {
+      box-sizing: border-box;
+    }
+    
+    * {
+      font-family: 'Noto Sans TC', sans-serif;
+    }
+    
+    .key {
+      transition: all 0.08s ease-out;
+      box-shadow: 
+        0 4px 0 #1a1a2e,
+        0 6px 10px rgba(0, 0, 0, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+    }
+    
+    .key:active, .key.pressed {
+      transform: translateY(4px);
+      box-shadow: 
+        0 0 0 #1a1a2e,
+        0 2px 5px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    }
+    
+    .key::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      background: radial-gradient(circle, rgba(167, 139, 250, 0.6) 0%, transparent 70%);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      opacity: 0;
+    }
+    
+    .key.ripple::after {
+      animation: ripple 0.4s ease-out;
+    }
+    
+    @keyframes ripple {
+      0% {
+        width: 0;
+        height: 0;
+        opacity: 1;
+      }
+      100% {
+        width: 200%;
+        height: 200%;
+        opacity: 0;
+      }
+    }
+    
+    .glow-effect {
+      animation: glow 0.3s ease-out;
+    }
+    
+    @keyframes glow {
+      0% {
+        box-shadow: 
+          0 4px 0 #1a1a2e,
+          0 6px 10px rgba(0, 0, 0, 0.4),
+          inset 0 1px 0 rgba(255, 255, 255, 0.1),
+          0 0 20px rgba(167, 139, 250, 0.8);
+      }
+      100% {
+        box-shadow: 
+          0 4px 0 #1a1a2e,
+          0 6px 10px rgba(0, 0, 0, 0.4),
+          inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      }
+    }
+    
+    .floating {
+      animation: float 3s ease-in-out infinite;
+    }
+    
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+    
+    .pulse-ring {
+      position: fixed;
+      border-radius: 50%;
+      pointer-events: none;
+      border: 2px solid rgba(167, 139, 250, 0.6);
+      animation: pulse-ring 0.6s ease-out forwards;
+    }
+    
+    @keyframes pulse-ring {
+      0% {
+        transform: translate(-50%, -50%) scale(0);
+        opacity: 1;
+      }
+      100% {
+        transform: translate(-50%, -50%) scale(2);
+        opacity: 0;
+      }
+    }
+    
+    .particle {
+      position: fixed;
+      pointer-events: none;
+      font-size: 20px;
+      animation: particle-float 1s ease-out forwards;
+    }
+    
+    @keyframes particle-float {
+      0% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+      }
+      100% {
+        opacity: 0;
+        transform: translate(-50%, calc(-50% - 60px)) scale(0.5);
+      }
+    }
+    
+    .press-counter {
+      transition: transform 0.1s ease-out;
+    }
+    
+    .press-counter.bump {
+      transform: scale(1.2);
+    }
+    
+    .toggle-btn {
+      transition: all 0.3s ease;
+    }
+    
+    .toggle-btn.active {
+      background: linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%);
+    }
+    
+    .keyboard-container {
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      transform-origin: center top;
+    }
+    
+    .keyboard-container.hidden {
+      opacity: 0;
+      transform: scaleY(0);
+      height: 0;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+  </style>
+  <style>@view-transition { navigation: auto; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+ </head>
+ <body class="h-full bg-gradient-to-br from-slate-900 via-purple-950 to-slate-900 overflow-auto">
+  <div class="app-wrapper w-full min-h-full flex flex-col items-center justify-center p-4 sm:p-8"><!-- Ambient particles background -->
+   <div class="fixed inset-0 overflow-hidden pointer-events-none">
+    <div class="absolute top-1/4 left-1/4 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl floating"></div>
+    <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-violet-500/10 rounded-full blur-3xl floating" style="animation-delay: -1.5s;"></div>
+   </div><!-- Main content -->
+   <div class="relative z-10 w-full max-w-4xl"><!-- Title -->
+    <div class="text-center mb-8">
+     <h1 id="main-title" class="text-3xl sm:text-4xl md:text-5xl font-light text-white/90 mb-3 tracking-wide">使用你的鍵盤來體驗ASMR</h1>
+     <p class="text-purple-300/60 text-sm sm:text-base">按下任意按鍵，享受舒壓的視覺回饋 ✨</p>
+    </div><!-- Sound selector -->
+    <div class="text-center mb-6"><label for="sound-select" class="block text-purple-300/70 text-sm mb-2">🎵 音效類型</label> <select id="sound-select" class="bg-slate-800/70 backdrop-blur-sm border border-white/20 rounded-full px-6 py-3 text-white text-sm cursor-pointer hover:bg-slate-700/70 transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500"> <option value="mechanical">機械鍵盤 (Cherry MX)</option> <option value="clicky">清脆按鍵 (Blue Switch)</option> <option value="soft">柔和靜音 (Red Switch)</option> <option value="typewriter">打字機</option> <option value="bubble">泡泡爆破</option> <option value="wooden">木質敲擊</option> <option value="electronic">電子音效</option> <option value="water">水滴聲</option> <option value="piano">鋼琴按鍵</option> <option value="marimba">木琴音階</option> <option value="glass">玻璃敲擊</option> <option value="drum">鼓點節奏</option> </select>
+    </div><!-- Theme and Toggle buttons -->
+    <div class="text-center mb-6 flex justify-center gap-4 flex-wrap"><button id="theme-toggle" class="toggle-btn active inline-flex items-center gap-2 px-6 py-3 rounded-full text-white font-medium shadow-lg hover:shadow-xl">
+      <svg id="theme-icon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
+      </svg><span id="theme-text">白色模式</span> </button> <button id="toggle-keyboard" class="toggle-btn active inline-flex items-center gap-2 px-6 py-3 rounded-full text-white font-medium shadow-lg hover:shadow-xl">
+      <svg id="toggle-icon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+      </svg><span id="toggle-text">隱藏螢幕鍵盤</span> </button>
+    </div><!-- On-screen keyboard -->
+    <div id="keyboard-container" class="keyboard-container bg-slate-800/50 backdrop-blur-md rounded-3xl p-4 sm:p-6 border border-white/10 shadow-2xl"><!-- Number row -->
+     <div class="flex justify-center gap-1 sm:gap-2 mb-1 sm:mb-2"><button class="key w-8 h-8 sm:w-12 sm:h-12 bg-gradient-to-b from-slate-700 to-slate-800 rounded-lg text-white/90 text-xs sm:text-sm font-medium" data-key="1">1</button> <button class="key w-8 h-8 sm:w-12 sm:h-12 bg-gradient-to-b from-slate-700 to-slate-800 rounded-lg text-white/90 text-xs sm:text-sm font-medium" data-key="2">2</button> <button class="key w-8 h-8 sm:w-12 sm:h-12 bg-gradient-to-b from-slate-700 to-slate-800 rounded-lg text-white/90 text-xs sm:text-sm font-medium" data-key="3">3</button> <button class="key w-8 h-8 sm:w-12 sm:h-12 bg-gradient-to-b from-slate-700 to-slate-800 rounded-lg text-white/90 text-xs sm:text-sm font-medium" data-key="4">4</button> <button class="key w-8 h-8 sm:w-12 sm:h-12 bg-gradient-to-b from-slate-700 to-slate-800 rounded-lg text-white/90 text-xs sm:text-sm font-medium" data-key="5">5</button> <button class="key w-8 h-8 sm:w-12 sm:h-12 bg-gradient-to-b from-slate-700 to-slate-800 rounded-lg text-white/90 text-xs sm:text-sm font-medium" data-key="6">6</button> <button class="key w-8 h-8 sm:w-12 sm:h-12 bg-gradient-to-b from-slate-700 to-slate-800 rounded-lg text-white/90 text-xs sm:text-sm font-medium" data-key="7">7</button> <button class="key w-8 h-8 sm:w-12 sm:h-12 bg-gradient-to-b from-slate-700 to-slate-800 rounded-lg text-white/90 text-xs sm:text-sm font-medium" data-key="8">8</button> <button class="key w-8 h-8 sm:w-12 sm:h-12 bg-gradient-to-b from-slate-700 to-slate-800 rounded-lg text-white/90 text-xs sm:text-sm font-medium" data-key="9">9</button> <button class="key w-8 h-8 sm:w-12 sm:h-12 bg-gradient-to-b from-slate-700 to-slate-800 rounded-lg text-white/90 text-xs sm:text-sm font-medium" data-key="0">0</button>
+     </div><!-- QWERTY row -->
+     <div class="flex justify-center gap-1 sm:gap-2 mb-1 sm:mb-2"><button class="key w-8 h-8 sm:w-12 sm:h-12 bg-gradient-to-b from-slate-700 to-slate-800 rounded-lg text-white/90 text-xs sm:text-sm font-medium" data-key="Q">Q</button> <button class="key w-8 h-8 sm:w-12 sm:h-12 bg-gradient-to-b from-slate-700 to-slate-800 rounded-lg text-white/90 text-xs sm:text-sm font-medium" data-key="W">W</button> <button class="key w-8 h-8 sm:w-12 sm:h-12 bg-gradient-to-b from-slate-700 to-slate-800 rounded-lg text-white/90 text-xs sm:text-sm font-medium" data-key="E">E</button> <button class="key w-8 h-8 sm:w-12 sm:h-12 bg-gradient-to-b from-slate-700 to-slate-800 rounded-lg text-white/90 text-xs sm:text-sm font-medium" data-key="R">R</button> <button class="key w-8 h-8 sm:w-12 sm:h-12 bg-gradient-to-b from-slate-700 to-slate-800 rounded-lg text-white/90 text-xs sm:text-sm font-medium" data-key="T">T</button> <button class="key w-8 h-8 sm:w-12 sm:h-12 bg-gradient-to-b from-slate-700 to-slate-800 rounded-lg text-white/90 text-xs sm:text-sm font-medium" data-key="Y">Y</button> <button class="key w-8 h-8 sm:w-12 sm:h-12 bg-gradient-to-b from-slate-700 to-slate-800 rounded-lg text-white/90 text-xs sm:text-sm font-medium" data-key="U">U</button> <button class="key w-8 h-8 sm:w-12 sm:h-12 bg-gradient-to-b from-slate-700 to-slate-800 rounded-lg text-white/90 text-xs sm:text-sm font-medium" data-key="I">I</button> <button class="key w-8 h-8 sm:w-12 sm:h-12 bg-gradient-to-b from-slate-700 to-slate-800 rounded-lg text-white/90 text-xs sm:text-sm font-medium" data-key="O">O</button> <button class="key w-8 h-8 sm:w-12 sm:h-12 bg-gradient-to-b from-slate-700 to-slate-800 rounded-lg text-white/90 text-xs sm:text-sm font-medium" data-key="P">P</button>
+     </div><!-- ASDF row -->
+     <div class="flex justify-center gap-1 sm:gap-2 mb-1 sm:mb-2 pl-3 sm:pl-6"><button class="key w-8 h-8 sm:w-12 sm:h-12 bg-gradient-to-b from-slate-700 to-slate-800 rounded-lg text-white/90 text-xs sm:text-sm font-medium" data-key="A">A</button> <button class="key w-8 h-8 sm:w-12 sm:h-12 bg-gradient-to-b from-slate-700 to-slate-800 rounded-lg text-white/90 text-xs sm:text-sm font-medium" data-key="S">S</button> <button class="key w-8 h-8 sm:w-12 sm:h-12 bg-gradient-to-b from-slate-700 to-slate-800 rounded-lg text-white/90 text-xs sm:text-sm font-medium" data-key="D">D</button> <button class="key w-8 h-8 sm:w-12 sm:h-12 bg-gradient-to-b from-slate-700 to-slate-800 rounded-lg text-white/90 text-xs sm:text-sm font-medium" data-key="F">F</button> <button class="key w-8 h-8 sm:w-12 sm:h-12 bg-gradient-to-b from-slate-700 to-slate-800 rounded-lg text-white/90 text-xs sm:text-sm font-medium" data-key="G">G</button> <button class="key w-8 h-8 sm:w-12 sm:h-12 bg-gradient-to-b from-slate-700 to-slate-800 rounded-lg text-white/90 text-xs sm:text-sm font-medium" data-key="H">H</button> <button class="key w-8 h-8 sm:w-12 sm:h-12 bg-gradient-to-b from-slate-700 to-slate-800 rounded-lg text-white/90 text-xs sm:text-sm font-medium" data-key="J">J</button> <button class="key w-8 h-8 sm:w-12 sm:h-12 bg-gradient-to-b from-slate-700 to-slate-800 rounded-lg text-white/90 text-xs sm:text-sm font-medium" data-key="K">K</button> <button class="key w-8 h-8 sm:w-12 sm:h-12 bg-gradient-to-b from-slate-700 to-slate-800 rounded-lg text-white/90 text-xs sm:text-sm font-medium" data-key="L">L</button>
+     </div><!-- ZXCV row -->
+     <div class="flex justify-center gap-1 sm:gap-2 mb-1 sm:mb-2 pl-6 sm:pl-12"><button class="key w-8 h-8 sm:w-12 sm:h-12 bg-gradient-to-b from-slate-700 to-slate-800 rounded-lg text-white/90 text-xs sm:text-sm font-medium" data-key="Z">Z</button> <button class="key w-8 h-8 sm:w-12 sm:h-12 bg-gradient-to-b from-slate-700 to-slate-800 rounded-lg text-white/90 text-xs sm:text-sm font-medium" data-key="X">X</button> <button class="key w-8 h-8 sm:w-12 sm:h-12 bg-gradient-to-b from-slate-700 to-slate-800 rounded-lg text-white/90 text-xs sm:text-sm font-medium" data-key="C">C</button> <button class="key w-8 h-8 sm:w-12 sm:h-12 bg-gradient-to-b from-slate-700 to-slate-800 rounded-lg text-white/90 text-xs sm:text-sm font-medium" data-key="V">V</button> <button class="key w-8 h-8 sm:w-12 sm:h-12 bg-gradient-to-b from-slate-700 to-slate-800 rounded-lg text-white/90 text-xs sm:text-sm font-medium" data-key="B">B</button> <button class="key w-8 h-8 sm:w-12 sm:h-12 bg-gradient-to-b from-slate-700 to-slate-800 rounded-lg text-white/90 text-xs sm:text-sm font-medium" data-key="N">N</button> <button class="key w-8 h-8 sm:w-12 sm:h-12 bg-gradient-to-b from-slate-700 to-slate-800 rounded-lg text-white/90 text-xs sm:text-sm font-medium" data-key="M">M</button>
+     </div><!-- Space bar -->
+     <div class="flex justify-center gap-1 sm:gap-2"><button class="key w-48 sm:w-80 h-8 sm:h-12 bg-gradient-to-b from-slate-700 to-slate-800 rounded-lg text-white/50 text-xs sm:text-sm font-medium" data-key=" ">SPACE</button>
+     </div>
+    </div><!-- Info text -->
+    <p class="text-center text-purple-300/40 text-xs mt-6">💡 提示：你也可以使用實體鍵盤輸入<br><span class="text-purple-300/30 text-xs mt-2 inline-block">🎧 建議使用耳機以獲得最佳 ASMR 體驗</span></p>
+   </div>
+  </div>
+  <script>
+    const defaultConfig = {
+      title_text: '使用鍵盤來體驗ASMR',
+      background_color: '#0f0a1f',
+      accent_color: '#a78bfa',
+      key_color: '#334155',
+      text_color: '#f1f5f9',
+      font_family: 'Noto Sans TC'
+    };
+    
+    let pressCount = 0;
+    let keyboardVisible = true;
+    let currentSoundType = 'mechanical';
+    let isDarkMode = true;
+    const particles = ['✨', '💫', '🔸', '🌟', '⚡️'];
+    
+    // Audio Context for generating ASMR keyboard sounds
+    let audioContext;
+    let masterGain;
+    
+    // Initialize audio context
+    function initAudio() {
+      try {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        masterGain = audioContext.createGain();
+        masterGain.gain.value = 0.3;
+        masterGain.connect(audioContext.destination);
+      } catch (e) {
+        console.log('Audio not supported, visual effects only');
+      }
+    }
+    
+    // Sound profiles with different characteristics
+    const soundProfiles = {
+      mechanical: {
+        freq1: [800, 200],
+        freq2: [1500, 300],
+        noise: 0.15,
+        duration: 0.05,
+        attack: 0.4
+      },
+      clicky: {
+        freq1: [1200, 300],
+        freq2: [2400, 400],
+        noise: 0.25,
+        duration: 0.04,
+        attack: 0.5
+      },
+      soft: {
+        freq1: [400, 100],
+        freq2: [800, 150],
+        noise: 0.05,
+        duration: 0.08,
+        attack: 0.25
+      },
+      typewriter: {
+        freq1: [600, 150],
+        freq2: [1800, 200],
+        noise: 0.3,
+        duration: 0.06,
+        attack: 0.6
+      },
+      bubble: {
+        freq1: [800, 400],
+        freq2: [1600, 600],
+        noise: 0.02,
+        duration: 0.15,
+        attack: 0.3
+      },
+      wooden: {
+        freq1: [300, 100],
+        freq2: [900, 200],
+        noise: 0.2,
+        duration: 0.07,
+        attack: 0.45
+      },
+      electronic: {
+        freq1: [2000, 500],
+        freq2: [3000, 700],
+        noise: 0.01,
+        duration: 0.03,
+        attack: 0.35
+      },
+      water: {
+        freq1: [1500, 800],
+        freq2: [3000, 1000],
+        noise: 0.08,
+        duration: 0.12,
+        attack: 0.2
+      },
+      piano: {
+        freq1: [440, 220],
+        freq2: [880, 440],
+        noise: 0.03,
+        duration: 0.3,
+        attack: 0.4
+      },
+      marimba: {
+        freq1: [700, 400],
+        freq2: [1400, 800],
+        noise: 0.04,
+        duration: 0.25,
+        attack: 0.35
+      },
+      glass: {
+        freq1: [2500, 500],
+        freq2: [5000, 1000],
+        noise: 0.02,
+        duration: 0.2,
+        attack: 0.3
+      },
+      drum: {
+        freq1: [150, 50],
+        freq2: [300, 100],
+        noise: 0.4,
+        duration: 0.08,
+        attack: 0.7
+      }
+    };
+    
+    // Generate ASMR keyboard click sound based on selected profile
+    function playKeySound() {
+      if (!audioContext) return;
+      
+      try {
+        const now = audioContext.currentTime;
+        const profile = soundProfiles[currentSoundType];
+        
+        // Create oscillators for realistic keyboard click
+        const osc1 = audioContext.createOscillator();
+        const osc2 = audioContext.createOscillator();
+        const noiseGain = audioContext.createGain();
+        const clickGain = audioContext.createGain();
+        
+        // Main click frequency
+        osc1.type = 'sine';
+        const freq1Base = profile.freq1[0] + Math.random() * profile.freq1[1];
+        osc1.frequency.setValueAtTime(freq1Base, now);
+        osc1.frequency.exponentialRampToValueAtTime(freq1Base * 0.2, now + profile.duration * 0.4);
+        
+        // Secondary resonance
+        osc2.type = 'sine';
+        const freq2Base = profile.freq2[0] + Math.random() * profile.freq2[1];
+        osc2.frequency.setValueAtTime(freq2Base, now);
+        osc2.frequency.exponentialRampToValueAtTime(freq2Base * 0.3, now + profile.duration * 0.3);
+        
+        // White noise for texture
+        const bufferSize = audioContext.sampleRate * profile.duration;
+        const buffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+          data[i] = Math.random() * 2 - 1;
+        }
+        const noise = audioContext.createBufferSource();
+        noise.buffer = buffer;
+        
+        // Noise envelope
+        noiseGain.gain.setValueAtTime(profile.noise, now);
+        noiseGain.gain.exponentialRampToValueAtTime(0.01, now + profile.duration * 0.6);
+        
+        // Click envelope
+        clickGain.gain.setValueAtTime(profile.attack, now);
+        clickGain.gain.exponentialRampToValueAtTime(0.01, now + profile.duration);
+        
+        // Connect everything
+        osc1.connect(clickGain);
+        osc2.connect(clickGain);
+        noise.connect(noiseGain);
+        clickGain.connect(masterGain);
+        noiseGain.connect(masterGain);
+        
+        // Start and stop
+        osc1.start(now);
+        osc1.stop(now + profile.duration);
+        osc2.start(now);
+        osc2.stop(now + profile.duration);
+        noise.start(now);
+        noise.stop(now + profile.duration);
+        
+      } catch (e) {
+        console.log('Error playing sound');
+      }
+    }
+    
+    // Initialize audio on first user interaction
+    let audioInitialized = false;
+    
+    function ensureAudioInitialized() {
+      if (!audioInitialized) {
+        initAudio();
+        audioInitialized = true;
+      }
+      // Resume audio context if suspended
+      if (audioContext && audioContext.state === 'suspended') {
+        audioContext.resume();
+      }
+    }
+    
+    document.addEventListener('click', ensureAudioInitialized);
+    document.addEventListener('keydown', ensureAudioInitialized);
+    
+    // Key press effect
+    function triggerKeyEffect(key, x, y) {
+      // Play ASMR keyboard sound
+      playKeySound();
+      
+      // Find and animate the on-screen key
+      const keyElement = document.querySelector(`[data-key="${key.toUpperCase()}"]`) || 
+                        document.querySelector(`[data-key="${key}"]`);
+      
+      if (keyElement && keyboardVisible) {
+        keyElement.classList.add('pressed', 'ripple', 'glow-effect');
+        setTimeout(() => {
+          keyElement.classList.remove('pressed', 'ripple', 'glow-effect');
+        }, 150);
+      }
+      
+      // Create pulse ring at position
+      createPulseRing(x, y);
+      
+      // Create floating particle
+      createParticle(x, y);
+    }
+    
+    function createPulseRing(x, y) {
+      const ring = document.createElement('div');
+      ring.className = 'pulse-ring';
+      ring.style.left = x + 'px';
+      ring.style.top = y + 'px';
+      ring.style.width = '60px';
+      ring.style.height = '60px';
+      document.body.appendChild(ring);
+      
+      setTimeout(() => ring.remove(), 600);
+    }
+    
+    function createParticle(x, y) {
+      const particle = document.createElement('div');
+      particle.className = 'particle';
+      particle.textContent = particles[Math.floor(Math.random() * particles.length)];
+      particle.style.left = x + 'px';
+      particle.style.top = y + 'px';
+      document.body.appendChild(particle);
+      
+      setTimeout(() => particle.remove(), 1000);
+    }
+    
+    // Physical keyboard events
+    document.addEventListener('keydown', (e) => {
+      if (e.repeat) return;
+      
+      const key = e.key;
+      // Get center of viewport for effect position
+      const x = window.innerWidth / 2 + (Math.random() - 0.5) * 100;
+      const y = window.innerHeight / 2 + (Math.random() - 0.5) * 50;
+      
+      triggerKeyEffect(key, x, y);
+    });
+    
+    // Setup keyboard listeners
+    function setupKeyboardListeners() {
+      const keys = document.querySelectorAll('.key');
+      keys.forEach(key => {
+        key.addEventListener('mousedown', handleKeyPress);
+        key.addEventListener('touchstart', handleKeyTouch, { passive: false });
+      });
+    }
+    
+    function handleKeyPress(e) {
+      e.preventDefault();
+      const keyChar = this.dataset.key;
+      const rect = this.getBoundingClientRect();
+      const x = rect.left + rect.width / 2;
+      const y = rect.top + rect.height / 2;
+      
+      triggerKeyEffect(keyChar, x, y);
+    }
+    
+    function handleKeyTouch(e) {
+      e.preventDefault();
+      const keyChar = this.dataset.key;
+      const touch = e.touches[0];
+      
+      triggerKeyEffect(keyChar, touch.clientX, touch.clientY);
+    }
+    
+    // Initialize keyboard listeners
+    setupKeyboardListeners();
+    
+    // Sound selector event listener
+    const soundSelect = document.getElementById('sound-select');
+    soundSelect.addEventListener('change', (e) => {
+      currentSoundType = e.target.value;
+    });
+    
+    // Theme toggle functionality
+    const themeToggleBtn = document.getElementById('theme-toggle');
+    const themeText = document.getElementById('theme-text');
+    const themeIcon = document.getElementById('theme-icon');
+    const body = document.body;
+    const appWrapper = document.querySelector('.app-wrapper');
+    
+    function applyTheme() {
+      const keyboardContainer = document.getElementById('keyboard-container');
+      const keys = document.querySelectorAll('.key');
+      
+      if (isDarkMode) {
+        body.className = 'h-full bg-gradient-to-br from-slate-900 via-purple-950 to-slate-900 overflow-auto';
+        themeToggleBtn.classList.add('active');
+        themeText.textContent = '白色模式';
+        themeIcon.innerHTML = `
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+        `;
+        
+        // Dark mode keyboard styling
+        keyboardContainer.style.background = 'rgba(30, 41, 59, 0.5)';
+        keys.forEach(key => {
+          key.style.background = 'linear-gradient(to bottom, rgb(51, 65, 85), rgb(30, 41, 59))';
+          key.style.color = 'rgba(241, 245, 249, 0.9)';
+        });
+        
+        // Update heading colors for dark mode
+        document.getElementById('main-title').className = 'text-3xl sm:text-4xl md:text-5xl font-light text-white/90 mb-3 tracking-wide';
+        document.querySelectorAll('.text-purple-300\\/60, .text-purple-300\\/70, .text-purple-300\\/40, .text-purple-300\\/30').forEach(el => {
+          el.style.color = '';
+        });
+      } else {
+        body.className = 'h-full bg-gradient-to-br from-slate-50 via-purple-100 to-slate-100 overflow-auto';
+        themeToggleBtn.classList.remove('active');
+        themeText.textContent = '黑色模式';
+        themeIcon.innerHTML = `
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+        `;
+        
+        // Light mode keyboard styling
+        keyboardContainer.style.background = 'rgba(241, 245, 249, 0.8)';
+        keys.forEach(key => {
+          key.style.background = 'linear-gradient(to bottom, rgb(226, 232, 240), rgb(203, 213, 225))';
+          key.style.color = 'rgba(30, 41, 59, 0.9)';
+        });
+        
+        // Update heading colors for light mode
+        document.getElementById('main-title').className = 'text-3xl sm:text-4xl md:text-5xl font-light text-slate-800 mb-3 tracking-wide';
+        document.querySelectorAll('.text-purple-300\\/60').forEach(el => {
+          el.style.color = 'rgb(100 116 139)';
+        });
+        document.querySelectorAll('.text-purple-300\\/70').forEach(el => {
+          el.style.color = 'rgb(71 85 105)';
+        });
+        document.querySelectorAll('.text-purple-300\\/40').forEach(el => {
+          el.style.color = 'rgb(148 163 184)';
+        });
+        document.querySelectorAll('.text-purple-300\\/30').forEach(el => {
+          el.style.color = 'rgb(203 213 225)';
+        });
+      }
+    }
+    
+    themeToggleBtn.addEventListener('click', () => {
+      isDarkMode = !isDarkMode;
+      applyTheme();
+    });
+    
+    // Toggle keyboard visibility
+    const toggleBtn = document.getElementById('toggle-keyboard');
+    const toggleText = document.getElementById('toggle-text');
+    const toggleIcon = document.getElementById('toggle-icon');
+    const keyboardContainer = document.getElementById('keyboard-container');
+    
+    toggleBtn.addEventListener('click', () => {
+      keyboardVisible = !keyboardVisible;
+      
+      if (keyboardVisible) {
+        keyboardContainer.classList.remove('hidden');
+        toggleBtn.classList.add('active');
+        toggleText.textContent = '隱藏螢幕鍵盤';
+        toggleIcon.innerHTML = `
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+        `;
+      } else {
+        keyboardContainer.classList.add('hidden');
+        toggleBtn.classList.remove('active');
+        toggleText.textContent = '顯示螢幕鍵盤';
+        toggleIcon.innerHTML = `
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>
+        `;
+      }
+    });
+    
+    // Element SDK initialization
+    if (window.elementSdk) {
+      window.elementSdk.init({
+        defaultConfig,
+        onConfigChange: async (config) => {
+          const titleEl = document.getElementById('main-title');
+          titleEl.textContent = config.title_text || defaultConfig.title_text;
+          
+          if (config.font_family) {
+            document.body.style.fontFamily = `${config.font_family}, ${defaultConfig.font_family}, sans-serif`;
+          }
+        },
+        mapToCapabilities: (config) => ({
+          recolorables: [],
+          borderables: [],
+          fontEditable: {
+            get: () => config.font_family || defaultConfig.font_family,
+            set: (value) => {
+              config.font_family = value;
+              window.elementSdk.setConfig({ font_family: value });
+            }
+          },
+          fontSizeable: undefined
+        }),
+        mapToEditPanelValues: (config) => new Map([
+          ['title_text', config.title_text || defaultConfig.title_text]
+        ])
+      });
+    }
+  </script>
+ 
+</body></html>
