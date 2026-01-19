@@ -130,14 +130,6 @@
       }
     }
     
-    .press-counter {
-      transition: transform 0.1s ease-out;
-    }
-    
-    .press-counter.bump {
-      transform: scale(1.2);
-    }
-    
     .toggle-btn {
       transition: all 0.3s ease;
     }
@@ -174,7 +166,7 @@
      <h1 id="main-title" class="text-3xl sm:text-4xl md:text-5xl font-light text-white/90 mb-3 tracking-wide">使用你的鍵盤來體驗ASMR</h1>
      <p class="text-purple-300/60 text-sm sm:text-base">按下任意按鍵，享受舒壓的視覺回饋 ✨</p>
     </div><!-- Sound selector -->
-    <div class="text-center mb-6"><label for="sound-select" class="block text-purple-300/70 text-sm mb-2">🎵 音效類型</label> <select id="sound-select" class="bg-slate-800/70 backdrop-blur-sm border border-white/20 rounded-full px-6 py-3 text-white text-sm cursor-pointer hover:bg-slate-700/70 transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500"> <option value="mechanical">機械鍵盤 (Cherry MX)</option> <option value="clicky">清脆按鍵 (Blue Switch)</option> <option value="soft">柔和靜音 (Red Switch)</option> <option value="typewriter">打字機</option> <option value="bubble">泡泡爆破</option> <option value="wooden">木質敲擊</option> <option value="electronic">電子音效</option> <option value="water">水滴聲</option> <option value="piano">鋼琴按鍵</option> <option value="marimba">木琴音階</option> <option value="glass">玻璃敲擊</option> <option value="drum">鼓點節奏</option> </select>
+    <div class="text-center mb-6"><label for="sound-select" class="block text-purple-300/70 text-sm mb-2">🎵 音效類型</label> <select id="sound-select" class="bg-slate-800/70 backdrop-blur-sm border border-white/20 rounded-full px-6 py-3 text-white text-sm cursor-pointer hover:bg-slate-700/70 transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500"> <option value="mechanical">機械鍵盤 (Cherry MX)</option> <option value="clicky">清脆按鍵 (Blue Switch)</option> <option value="soft">柔和靜音 (Red Switch)</option> <option value="typewriter">打字機</option> <option value="bubble">氣泡爆破</option> <option value="wooden">木質敲擊</option> <option value="electronic">電子音效</option> <option value="water">水滴聲</option> <option value="piano">鋼琴按鍵</option> <option value="marimba">木琴音階</option> <option value="glass">玻璃敲擊</option> <option value="drum">鼓點節奏</option> <option value="sand">沙子腳步</option> <option value="snow">雪地踩踏</option> <option value="bamboo">竹子敲擊</option> <option value="metal">金屬碰撞</option> <option value="cork">軟木塞</option> <option value="crystal">水晶音叉</option> <option value="vinyl">黑膠唱片</option> <option value="raindrop">雨滴</option> <option value="bell">鈴鐺</option> <option value="flute">笛子</option> <option value="harp">豎琴</option> <option value="chime">風鈴</option> <option value="gong">銅鑼</option> <option value="xylophone">木琴</option> <option value="synth">合成器</option> <option value="laser">雷射音效</option> <option value="coin">硬幣</option> <option value="paper">翻書頁</option> <option value="zipper">拉鍊</option> <option value="switch">開關</option> <option value="pop">爆米花</option> <option value="snap">手指彈響</option> </select>
     </div><!-- Theme and Toggle buttons -->
     <div class="text-center mb-6 flex justify-center gap-4 flex-wrap"><button id="theme-toggle" class="toggle-btn active inline-flex items-center gap-2 px-6 py-3 rounded-full text-white font-medium shadow-lg hover:shadow-xl">
       <svg id="theme-icon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
@@ -199,211 +191,174 @@
   </div>
   <script>
     const defaultConfig = {
-      title_text: '使用鍵盤來體驗ASMR',
-      background_color: '#0f0a1f',
-      accent_color: '#a78bfa',
-      key_color: '#334155',
-      text_color: '#f1f5f9',
+      title_text: '使用你的鍵盤來體驗ASMR',
       font_family: 'Noto Sans TC'
     };
     
-    let pressCount = 0;
     let keyboardVisible = true;
     let currentSoundType = 'mechanical';
     let isDarkMode = true;
-    const particles = ['✨', '💫', '🔸', '🌟', '⚡️'];
+    const particles = ['✨', '💫', '⭐', '🌟', '💜'];
     
-    // Audio Context for generating ASMR keyboard sounds
+    // Audio Context
     let audioContext;
     let masterGain;
     
-    // Initialize audio context
     function initAudio() {
       try {
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
         masterGain = audioContext.createGain();
-        masterGain.gain.value = 0.3;
+        masterGain.gain.value = 0.4;
         masterGain.connect(audioContext.destination);
       } catch (e) {
-        console.log('Audio not supported, visual effects only');
+        console.log('Audio not supported');
       }
     }
     
-    // Sound profiles with different characteristics
+    // Enhanced sound profiles with realistic characteristics
     const soundProfiles = {
-      mechanical: {
-        freq1: [800, 200],
-        freq2: [1500, 300],
-        noise: 0.15,
-        duration: 0.05,
-        attack: 0.4
-      },
-      clicky: {
-        freq1: [1200, 300],
-        freq2: [2400, 400],
-        noise: 0.25,
-        duration: 0.04,
-        attack: 0.5
-      },
-      soft: {
-        freq1: [400, 100],
-        freq2: [800, 150],
-        noise: 0.05,
-        duration: 0.08,
-        attack: 0.25
-      },
-      typewriter: {
-        freq1: [600, 150],
-        freq2: [1800, 200],
-        noise: 0.3,
-        duration: 0.06,
-        attack: 0.6
-      },
-      bubble: {
-        freq1: [800, 400],
-        freq2: [1600, 600],
-        noise: 0.02,
-        duration: 0.15,
-        attack: 0.3
-      },
-      wooden: {
-        freq1: [300, 100],
-        freq2: [900, 200],
-        noise: 0.2,
-        duration: 0.07,
-        attack: 0.45
-      },
-      electronic: {
-        freq1: [2000, 500],
-        freq2: [3000, 700],
-        noise: 0.01,
-        duration: 0.03,
-        attack: 0.35
-      },
-      water: {
-        freq1: [1500, 800],
-        freq2: [3000, 1000],
-        noise: 0.08,
-        duration: 0.12,
-        attack: 0.2
-      },
-      piano: {
-        freq1: [440, 220],
-        freq2: [880, 440],
-        noise: 0.03,
-        duration: 0.3,
-        attack: 0.4
-      },
-      marimba: {
-        freq1: [700, 400],
-        freq2: [1400, 800],
-        noise: 0.04,
-        duration: 0.25,
-        attack: 0.35
-      },
-      glass: {
-        freq1: [2500, 500],
-        freq2: [5000, 1000],
-        noise: 0.02,
-        duration: 0.2,
-        attack: 0.3
-      },
-      drum: {
-        freq1: [150, 50],
-        freq2: [300, 100],
-        noise: 0.4,
-        duration: 0.08,
-        attack: 0.7
-      }
+      mechanical: { f1: 850, f2: 1600, f3: 3200, noise: 0.18, dur: 0.055, vol: 0.45, attack: 0.002, decay: 0.92 },
+      clicky: { f1: 1300, f2: 2600, f3: 4800, noise: 0.28, dur: 0.045, vol: 0.55, attack: 0.001, decay: 0.95 },
+      soft: { f1: 420, f2: 840, f3: 1680, noise: 0.06, dur: 0.09, vol: 0.28, attack: 0.008, decay: 0.85 },
+      typewriter: { f1: 650, f2: 1900, f3: 3500, noise: 0.35, dur: 0.065, vol: 0.65, attack: 0.001, decay: 0.96 },
+      bubble: { f1: 900, f2: 1800, f3: 3600, noise: 0.03, dur: 0.18, vol: 0.35, attack: 0.015, decay: 0.75 },
+      wooden: { f1: 320, f2: 960, f3: 1920, noise: 0.25, dur: 0.075, vol: 0.5, attack: 0.003, decay: 0.9 },
+      electronic: { f1: 2200, f2: 3300, f3: 6600, noise: 0.02, dur: 0.035, vol: 0.4, attack: 0.001, decay: 0.94 },
+      water: { f1: 1600, f2: 3200, f3: 6400, noise: 0.1, dur: 0.14, vol: 0.25, attack: 0.02, decay: 0.8 },
+      piano: { f1: 440, f2: 880, f3: 1760, noise: 0.04, dur: 0.35, vol: 0.45, attack: 0.005, decay: 0.7 },
+      marimba: { f1: 750, f2: 1500, f3: 3000, noise: 0.05, dur: 0.28, vol: 0.4, attack: 0.003, decay: 0.75 },
+      glass: { f1: 2700, f2: 5400, f3: 10800, noise: 0.03, dur: 0.25, vol: 0.35, attack: 0.002, decay: 0.65 },
+      drum: { f1: 160, f2: 320, f3: 640, noise: 0.45, dur: 0.09, vol: 0.75, attack: 0.001, decay: 0.95 },
+      sand: { f1: 350, f2: 700, f3: 1400, noise: 0.7, dur: 0.09, vol: 0.55, attack: 0.002, decay: 0.88 },
+      snow: { f1: 220, f2: 440, f3: 880, noise: 0.55, dur: 0.13, vol: 0.35, attack: 0.01, decay: 0.82 },
+      bamboo: { f1: 850, f2: 2550, f3: 5100, noise: 0.4, dur: 0.065, vol: 0.65, attack: 0.001, decay: 0.93 },
+      metal: { f1: 3000, f2: 6000, f3: 12000, noise: 0.18, dur: 0.4, vol: 0.45, attack: 0.002, decay: 0.55 },
+      cork: { f1: 420, f2: 630, f3: 1260, noise: 0.45, dur: 0.045, vol: 0.55, attack: 0.001, decay: 0.97 },
+      crystal: { f1: 4200, f2: 8400, f3: 16800, noise: 0.02, dur: 0.9, vol: 0.3, attack: 0.01, decay: 0.4 },
+      vinyl: { f1: 170, f2: 340, f3: 680, noise: 0.6, dur: 0.11, vol: 0.4, attack: 0.005, decay: 0.87 },
+      raindrop: { f1: 2700, f2: 5400, f3: 10800, noise: 0.15, dur: 0.07, vol: 0.45, attack: 0.001, decay: 0.92 },
+      bell: { f1: 880, f2: 2640, f3: 5280, noise: 0.03, dur: 1.3, vol: 0.35, attack: 0.01, decay: 0.35 },
+      flute: { f1: 1046, f2: 2092, f3: 4184, noise: 0.05, dur: 0.45, vol: 0.3, attack: 0.02, decay: 0.6 },
+      harp: { f1: 523, f2: 1569, f3: 3138, noise: 0.04, dur: 0.65, vol: 0.35, attack: 0.01, decay: 0.5 },
+      chime: { f1: 1568, f2: 4704, f3: 9408, noise: 0.02, dur: 1.6, vol: 0.25, attack: 0.015, decay: 0.3 },
+      gong: { f1: 110, f2: 330, f3: 660, noise: 0.3, dur: 2.2, vol: 0.4, attack: 0.02, decay: 0.25 },
+      xylophone: { f1: 1046, f2: 3138, f3: 6276, noise: 0.1, dur: 0.32, vol: 0.5, attack: 0.002, decay: 0.8 },
+      synth: { f1: 440, f2: 1320, f3: 2640, noise: 0.01, dur: 0.28, vol: 0.4, attack: 0.01, decay: 0.7 },
+      laser: { f1: 4500, f2: 2250, f3: 750, noise: 0.1, dur: 0.17, vol: 0.45, attack: 0.001, decay: 0.85 },
+      coin: { f1: 3200, f2: 6400, f3: 12800, noise: 0.12, dur: 0.28, vol: 0.5, attack: 0.002, decay: 0.75 },
+      paper: { f1: 550, f2: 1300, f3: 2600, noise: 0.75, dur: 0.13, vol: 0.35, attack: 0.005, decay: 0.88 },
+      zipper: { f1: 650, f2: 1950, f3: 3900, noise: 0.8, dur: 0.045, vol: 0.6, attack: 0.001, decay: 0.96 },
+      switch: { f1: 1300, f2: 2600, f3: 5200, noise: 0.35, dur: 0.035, vol: 0.65, attack: 0.001, decay: 0.95 },
+      pop: { f1: 450, f2: 900, f3: 1800, noise: 0.45, dur: 0.09, vol: 0.55, attack: 0.002, decay: 0.92 },
+      snap: { f1: 1600, f2: 3200, f3: 6400, noise: 0.4, dur: 0.025, vol: 0.7, attack: 0.001, decay: 0.98 }
     };
     
-    // Generate ASMR keyboard click sound based on selected profile
     function playKeySound() {
       if (!audioContext) return;
       
       try {
         const now = audioContext.currentTime;
-        const profile = soundProfiles[currentSoundType];
+        const p = soundProfiles[currentSoundType];
         
-        // Create oscillators for realistic keyboard click
+        // Triple oscillator setup for richer harmonics
         const osc1 = audioContext.createOscillator();
-        const osc2 = audioContext.createOscillator();
-        const noiseGain = audioContext.createGain();
-        const clickGain = audioContext.createGain();
-        
-        // Main click frequency
+        const gain1 = audioContext.createGain();
         osc1.type = 'sine';
-        const freq1Base = profile.freq1[0] + Math.random() * profile.freq1[1];
-        osc1.frequency.setValueAtTime(freq1Base, now);
-        osc1.frequency.exponentialRampToValueAtTime(freq1Base * 0.2, now + profile.duration * 0.4);
+        osc1.frequency.value = p.f1 + (Math.random() * 10 - 5); // Slight detuning
+        osc1.connect(gain1);
+        gain1.connect(masterGain);
         
-        // Secondary resonance
+        const osc2 = audioContext.createOscillator();
+        const gain2 = audioContext.createGain();
         osc2.type = 'sine';
-        const freq2Base = profile.freq2[0] + Math.random() * profile.freq2[1];
-        osc2.frequency.setValueAtTime(freq2Base, now);
-        osc2.frequency.exponentialRampToValueAtTime(freq2Base * 0.3, now + profile.duration * 0.3);
+        osc2.frequency.value = p.f2 + (Math.random() * 10 - 5);
+        osc2.connect(gain2);
+        gain2.connect(masterGain);
         
-        // White noise for texture
-        const bufferSize = audioContext.sampleRate * profile.duration;
+        const osc3 = audioContext.createOscillator();
+        const gain3 = audioContext.createGain();
+        osc3.type = 'triangle';
+        osc3.frequency.value = p.f3 + (Math.random() * 10 - 5);
+        osc3.connect(gain3);
+        gain3.connect(masterGain);
+        
+        // Enhanced noise with filtering
+        const bufferSize = audioContext.sampleRate * p.dur;
         const buffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
         const data = buffer.getChannelData(0);
         for (let i = 0; i < bufferSize; i++) {
-          data[i] = Math.random() * 2 - 1;
+          data[i] = (Math.random() * 2 - 1) * p.noise;
         }
         const noise = audioContext.createBufferSource();
+        const noiseGain = audioContext.createGain();
+        const noiseFilter = audioContext.createBiquadFilter();
+        noiseFilter.type = 'lowpass';
+        noiseFilter.frequency.value = p.f2 * 1.5;
         noise.buffer = buffer;
-        
-        // Noise envelope
-        noiseGain.gain.setValueAtTime(profile.noise, now);
-        noiseGain.gain.exponentialRampToValueAtTime(0.01, now + profile.duration * 0.6);
-        
-        // Click envelope
-        clickGain.gain.setValueAtTime(profile.attack, now);
-        clickGain.gain.exponentialRampToValueAtTime(0.01, now + profile.duration);
-        
-        // Connect everything
-        osc1.connect(clickGain);
-        osc2.connect(clickGain);
-        noise.connect(noiseGain);
-        clickGain.connect(masterGain);
+        noise.connect(noiseFilter);
+        noiseFilter.connect(noiseGain);
         noiseGain.connect(masterGain);
         
-        // Start and stop
+        // Advanced ADSR envelopes with individual attack/decay
+        const attackTime = p.attack * p.dur;
+        const decayStart = attackTime;
+        const releaseStart = p.dur * (1 - p.decay);
+        
+        // Oscillator 1 envelope - fundamental
+        gain1.gain.setValueAtTime(0.001, now);
+        gain1.gain.exponentialRampToValueAtTime(p.vol * 0.8, now + attackTime);
+        gain1.gain.exponentialRampToValueAtTime(p.vol * 0.4, now + decayStart + (p.dur * 0.2));
+        gain1.gain.exponentialRampToValueAtTime(0.001, now + p.dur);
+        
+        // Oscillator 2 envelope - harmonic
+        gain2.gain.setValueAtTime(0.001, now);
+        gain2.gain.exponentialRampToValueAtTime(p.vol * 0.4, now + attackTime);
+        gain2.gain.exponentialRampToValueAtTime(p.vol * 0.2, now + decayStart + (p.dur * 0.15));
+        gain2.gain.exponentialRampToValueAtTime(0.001, now + p.dur * 0.85);
+        
+        // Oscillator 3 envelope - brightness
+        gain3.gain.setValueAtTime(0.001, now);
+        gain3.gain.exponentialRampToValueAtTime(p.vol * 0.25, now + attackTime * 0.5);
+        gain3.gain.exponentialRampToValueAtTime(0.001, now + p.dur * 0.6);
+        
+        // Noise envelope - transient
+        noiseGain.gain.setValueAtTime(p.vol * 0.4, now);
+        noiseGain.gain.exponentialRampToValueAtTime(p.vol * 0.1, now + attackTime * 2);
+        noiseGain.gain.exponentialRampToValueAtTime(0.001, now + p.dur * 0.4);
+        
+        // Start and stop all sources
         osc1.start(now);
-        osc1.stop(now + profile.duration);
+        osc1.stop(now + p.dur);
         osc2.start(now);
-        osc2.stop(now + profile.duration);
+        osc2.stop(now + p.dur);
+        osc3.start(now);
+        osc3.stop(now + p.dur);
         noise.start(now);
-        noise.stop(now + profile.duration);
+        noise.stop(now + p.dur);
         
       } catch (e) {
-        console.log('Error playing sound');
+        console.log('Sound error:', e);
       }
     }
     
-    // Initialize audio on first user interaction
     let audioInitialized = false;
     
-    function ensureAudioInitialized() {
+    function ensureAudio() {
       if (!audioInitialized) {
         initAudio();
         audioInitialized = true;
       }
-      // Resume audio context if suspended
       if (audioContext && audioContext.state === 'suspended') {
         audioContext.resume();
       }
     }
     
-    document.addEventListener('click', ensureAudioInitialized);
-    document.addEventListener('keydown', ensureAudioInitialized);
+    document.addEventListener('click', ensureAudio, { once: false });
+    document.addEventListener('keydown', ensureAudio, { once: false });
     
-    // Key press effect
     function triggerKeyEffect(key, x, y) {
-      // Play ASMR keyboard sound
       playKeySound();
       
-      // Find and animate the on-screen key
       const keyElement = document.querySelector(`[data-key="${key.toUpperCase()}"]`) || 
                         document.querySelector(`[data-key="${key}"]`);
       
@@ -414,10 +369,7 @@
         }, 150);
       }
       
-      // Create pulse ring at position
       createPulseRing(x, y);
-      
-      // Create floating particle
       createParticle(x, y);
     }
     
@@ -429,7 +381,6 @@
       ring.style.width = '60px';
       ring.style.height = '60px';
       document.body.appendChild(ring);
-      
       setTimeout(() => ring.remove(), 600);
     }
     
@@ -440,118 +391,67 @@
       particle.style.left = x + 'px';
       particle.style.top = y + 'px';
       document.body.appendChild(particle);
-      
       setTimeout(() => particle.remove(), 1000);
     }
     
-    // Physical keyboard events
     document.addEventListener('keydown', (e) => {
       if (e.repeat) return;
-      
-      const key = e.key;
-      // Get center of viewport for effect position
       const x = window.innerWidth / 2 + (Math.random() - 0.5) * 100;
       const y = window.innerHeight / 2 + (Math.random() - 0.5) * 50;
-      
-      triggerKeyEffect(key, x, y);
+      triggerKeyEffect(e.key, x, y);
     });
     
-    // Setup keyboard listeners
     function setupKeyboardListeners() {
-      const keys = document.querySelectorAll('.key');
-      keys.forEach(key => {
-        key.addEventListener('mousedown', handleKeyPress);
-        key.addEventListener('touchstart', handleKeyTouch, { passive: false });
+      document.querySelectorAll('.key').forEach(key => {
+        key.addEventListener('mousedown', function(e) {
+          e.preventDefault();
+          const rect = this.getBoundingClientRect();
+          triggerKeyEffect(this.dataset.key, rect.left + rect.width / 2, rect.top + rect.height / 2);
+        });
+        key.addEventListener('touchstart', function(e) {
+          e.preventDefault();
+          const touch = e.touches[0];
+          triggerKeyEffect(this.dataset.key, touch.clientX, touch.clientY);
+        }, { passive: false });
       });
     }
     
-    function handleKeyPress(e) {
-      e.preventDefault();
-      const keyChar = this.dataset.key;
-      const rect = this.getBoundingClientRect();
-      const x = rect.left + rect.width / 2;
-      const y = rect.top + rect.height / 2;
-      
-      triggerKeyEffect(keyChar, x, y);
-    }
-    
-    function handleKeyTouch(e) {
-      e.preventDefault();
-      const keyChar = this.dataset.key;
-      const touch = e.touches[0];
-      
-      triggerKeyEffect(keyChar, touch.clientX, touch.clientY);
-    }
-    
-    // Initialize keyboard listeners
     setupKeyboardListeners();
     
-    // Sound selector event listener
-    const soundSelect = document.getElementById('sound-select');
-    soundSelect.addEventListener('change', (e) => {
+    document.getElementById('sound-select').addEventListener('change', (e) => {
       currentSoundType = e.target.value;
     });
     
-    // Theme toggle functionality
     const themeToggleBtn = document.getElementById('theme-toggle');
     const themeText = document.getElementById('theme-text');
     const themeIcon = document.getElementById('theme-icon');
-    const body = document.body;
-    const appWrapper = document.querySelector('.app-wrapper');
     
     function applyTheme() {
       const keyboardContainer = document.getElementById('keyboard-container');
       const keys = document.querySelectorAll('.key');
       
       if (isDarkMode) {
-        body.className = 'h-full bg-gradient-to-br from-slate-900 via-purple-950 to-slate-900 overflow-auto';
+        document.body.className = 'h-full bg-gradient-to-br from-slate-900 via-purple-950 to-slate-900 overflow-auto';
         themeToggleBtn.classList.add('active');
         themeText.textContent = '白色模式';
-        themeIcon.innerHTML = `
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
-        `;
-        
-        // Dark mode keyboard styling
+        themeIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>';
         keyboardContainer.style.background = 'rgba(30, 41, 59, 0.5)';
         keys.forEach(key => {
           key.style.background = 'linear-gradient(to bottom, rgb(51, 65, 85), rgb(30, 41, 59))';
           key.style.color = 'rgba(241, 245, 249, 0.9)';
         });
-        
-        // Update heading colors for dark mode
         document.getElementById('main-title').className = 'text-3xl sm:text-4xl md:text-5xl font-light text-white/90 mb-3 tracking-wide';
-        document.querySelectorAll('.text-purple-300\\/60, .text-purple-300\\/70, .text-purple-300\\/40, .text-purple-300\\/30').forEach(el => {
-          el.style.color = '';
-        });
       } else {
-        body.className = 'h-full bg-gradient-to-br from-slate-50 via-purple-100 to-slate-100 overflow-auto';
+        document.body.className = 'h-full bg-gradient-to-br from-slate-50 via-purple-100 to-slate-100 overflow-auto';
         themeToggleBtn.classList.remove('active');
         themeText.textContent = '黑色模式';
-        themeIcon.innerHTML = `
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
-        `;
-        
-        // Light mode keyboard styling
+        themeIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>';
         keyboardContainer.style.background = 'rgba(241, 245, 249, 0.8)';
         keys.forEach(key => {
           key.style.background = 'linear-gradient(to bottom, rgb(226, 232, 240), rgb(203, 213, 225))';
           key.style.color = 'rgba(30, 41, 59, 0.9)';
         });
-        
-        // Update heading colors for light mode
         document.getElementById('main-title').className = 'text-3xl sm:text-4xl md:text-5xl font-light text-slate-800 mb-3 tracking-wide';
-        document.querySelectorAll('.text-purple-300\\/60').forEach(el => {
-          el.style.color = 'rgb(100 116 139)';
-        });
-        document.querySelectorAll('.text-purple-300\\/70').forEach(el => {
-          el.style.color = 'rgb(71 85 105)';
-        });
-        document.querySelectorAll('.text-purple-300\\/40').forEach(el => {
-          el.style.color = 'rgb(148 163 184)';
-        });
-        document.querySelectorAll('.text-purple-300\\/30').forEach(el => {
-          el.style.color = 'rgb(203 213 225)';
-        });
       }
     }
     
@@ -560,7 +460,6 @@
       applyTheme();
     });
     
-    // Toggle keyboard visibility
     const toggleBtn = document.getElementById('toggle-keyboard');
     const toggleText = document.getElementById('toggle-text');
     const toggleIcon = document.getElementById('toggle-icon');
@@ -568,33 +467,24 @@
     
     toggleBtn.addEventListener('click', () => {
       keyboardVisible = !keyboardVisible;
-      
       if (keyboardVisible) {
         keyboardContainer.classList.remove('hidden');
         toggleBtn.classList.add('active');
         toggleText.textContent = '隱藏螢幕鍵盤';
-        toggleIcon.innerHTML = `
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-        `;
+        toggleIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>';
       } else {
         keyboardContainer.classList.add('hidden');
         toggleBtn.classList.remove('active');
         toggleText.textContent = '顯示螢幕鍵盤';
-        toggleIcon.innerHTML = `
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>
-        `;
+        toggleIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>';
       }
     });
     
-    // Element SDK initialization
     if (window.elementSdk) {
       window.elementSdk.init({
         defaultConfig,
         onConfigChange: async (config) => {
-          const titleEl = document.getElementById('main-title');
-          titleEl.textContent = config.title_text || defaultConfig.title_text;
-          
+          document.getElementById('main-title').textContent = config.title_text || defaultConfig.title_text;
           if (config.font_family) {
             document.body.style.fontFamily = `${config.font_family}, ${defaultConfig.font_family}, sans-serif`;
           }
