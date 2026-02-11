@@ -8,7 +8,7 @@
     <style>
         :root {
             --bg-gradient: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-            --card-bg: rgba(255, 255, 255, 0.05);
+            --card-bg: #16213e;
             --border-color: rgba(255, 255, 255, 0.1);
             --accent-primary: #4facfe;
             --accent-secondary: #00f2fe;
@@ -18,10 +18,10 @@
             --js-color: #feca57;
         }
 
-        * { box-sizing: border-box; transition: all 0.3s ease; }
+        * { box-sizing: border-box; transition: all 0.25s ease; }
 
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-family: 'Inter', -apple-system, sans-serif;
             background: var(--bg-gradient);
             color: var(--text-main);
             margin: 0;
@@ -37,7 +37,6 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 20px;
-            padding: 0 10px;
         }
 
         h1 { margin: 0; font-size: 1.2rem; letter-spacing: 1px; font-weight: 300; }
@@ -46,7 +45,7 @@
         .controls {
             display: flex;
             gap: 15px;
-            background: var(--card-bg);
+            background: rgba(255, 255, 255, 0.05);
             padding: 10px 20px;
             border-radius: 50px;
             border: 1px solid var(--border-color);
@@ -70,17 +69,8 @@
             min-height: 0;
         }
 
-        .input-side {
-            display: grid;
-            grid-template-rows: 1fr 1fr 1fr;
-            gap: 15px;
-        }
-
-        .output-side {
-            display: grid;
-            grid-template-rows: 1.2fr 1fr;
-            gap: 15px;
-        }
+        .input-side { display: grid; grid-template-rows: repeat(3, 1fr); gap: 15px; }
+        .output-side { display: grid; grid-template-rows: 1.2fr 1fr; gap: 15px; }
 
         .glass-card {
             background: var(--card-bg);
@@ -89,26 +79,31 @@
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            backdrop-filter: blur(5px);
+            position: relative;
+        }
+
+        .expanded {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            z-index: 9999;
+            border-radius: 0;
         }
 
         .card-header {
             padding: 10px 15px;
-            background: rgba(0, 0, 0, 0.2);
+            background: rgba(0, 0, 0, 0.3);
             display: flex;
             justify-content: space-between;
             align-items: center;
             font-size: 0.85rem;
             font-weight: 600;
-            text-transform: uppercase;
         }
 
-        .disabled {
-            opacity: 0.2;
-            filter: grayscale(1) blur(2px);
-            pointer-events: none;
-            transform: scale(0.98);
-        }
+        .header-btns { display: flex; gap: 8px; align-items: center; }
+        .disabled { opacity: 0.2; filter: grayscale(1); pointer-events: none; }
 
         textarea {
             flex: 1;
@@ -117,7 +112,7 @@
             color: #fff;
             padding: 15px;
             font-family: 'Fira Code', 'Consolas', monospace;
-            font-size: 13px;
+            font-size: 14px;
             resize: none;
             outline: none;
             line-height: 1.6;
@@ -131,42 +126,40 @@
             border-radius: 50px;
             font-weight: bold;
             cursor: pointer;
-            box-shadow: 0 4px 15px rgba(79, 172, 254, 0.4);
             display: flex;
             align-items: center;
             gap: 8px;
         }
 
-        .btn-action:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(79, 172, 254, 0.6);
+        .btn-icon {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            padding: 6px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .btn-upload {
             background: rgba(255, 255, 255, 0.1);
-            padding: 4px 10px;
-            border-radius: 4px;
-            font-size: 0.7rem;
+            padding: 5px 12px;
+            border-radius: 6px;
+            font-size: 0.75rem;
             cursor: pointer;
             display: flex;
             align-items: center;
-            gap: 5px;
+            gap: 6px;
         }
 
-        .btn-upload:hover { background: rgba(255, 255, 255, 0.2); }
+        .svg-icon { width: 16px; height: 16px; fill: currentColor; }
+        iframe { width: 100%; height: 100%; border: none; background: #fff; }
 
-        .svg-icon {
-            width: 14px;
-            height: 14px;
-            fill: currentColor;
-        }
-
-        iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-            background: #fff;
-        }
+        .show-on-expanded { display: none; }
+        .expanded .show-on-expanded { display: flex; }
+        .expanded .hide-on-expanded { display: none; }
 
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 10px; }
@@ -192,55 +185,60 @@
             <div class="glass-card" id="boxHtml">
                 <div class="card-header" style="border-left: 4px solid var(--html-color);">
                     <span><i class="fab fa-html5"></i> HTML Body</span>
-                    <label class="btn-upload">
-                        <svg class="svg-icon" viewBox="0 0 24 24"><path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z"/></svg>
-                        上傳
-                        <input type="file" hidden accept=".html,.htm,.txt" onchange="loadFile(this, 'inputHtml', 'html')">
-                    </label>
+                    <div class="header-btns">
+                        <label class="btn-upload"><svg class="svg-icon" viewBox="0 0 24 24"><path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z"/></svg> 上傳<input type="file" hidden accept=".html,.htm,text/html" onchange="loadFile(this, 'inputHtml', 'html')"></label>
+                        <button class="btn-icon hide-on-expanded" onclick="toggleExpand('boxHtml')"><svg class="svg-icon" viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg></button>
+                        <button class="btn-icon show-on-expanded" onclick="toggleExpand('boxHtml')"><svg class="svg-icon" viewBox="0 0 24 24"><path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/></svg></button>
+                    </div>
                 </div>
-                <textarea id="inputHtml" placeholder="/* 貼上 HTML 結構 */"></textarea>
+                <textarea id="inputHtml" placeholder="在此輸入 HTML..."></textarea>
             </div>
 
             <div class="glass-card" id="boxCss">
                 <div class="card-header" style="border-left: 4px solid var(--css-color);">
                     <span><i class="fab fa-css3-alt"></i> CSS Styles</span>
-                    <label class="btn-upload">
-                        <svg class="svg-icon" viewBox="0 0 24 24"><path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z"/></svg>
-                        上傳
-                        <input type="file" hidden accept=".css,.txt" onchange="loadFile(this, 'inputCss', 'css')">
-                    </label>
+                    <div class="header-btns">
+                        <label class="btn-upload"><svg class="svg-icon" viewBox="0 0 24 24"><path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z"/></svg> 上傳<input type="file" hidden accept=".css,text/css" onchange="loadFile(this, 'inputCss', 'css')"></label>
+                        <button class="btn-icon hide-on-expanded" onclick="toggleExpand('boxCss')"><svg class="svg-icon" viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg></button>
+                        <button class="btn-icon show-on-expanded" onclick="toggleExpand('boxCss')"><svg class="svg-icon" viewBox="0 0 24 24"><path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/></svg></button>
+                    </div>
                 </div>
-                <textarea id="inputCss" placeholder="/* 貼上 CSS 樣式 */"></textarea>
+                <textarea id="inputCss" placeholder="/* 在此輸入 CSS */"></textarea>
             </div>
 
             <div class="glass-card" id="boxJs">
                 <div class="card-header" style="border-left: 4px solid var(--js-color);">
                     <span><i class="fab fa-js"></i> JavaScript</span>
-                    <label class="btn-upload">
-                        <svg class="svg-icon" viewBox="0 0 24 24"><path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z"/></svg>
-                        上傳
-                        <input type="file" hidden accept=".js,.txt,application/javascript,text/javascript" onchange="loadFile(this, 'inputJs', 'js')">
-                    </label>
+                    <div class="header-btns">
+                        <label class="btn-upload"><svg class="svg-icon" viewBox="0 0 24 24"><path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z"/></svg> 上傳<input type="file" hidden accept="text/javascript,text/plain,.js" onchange="loadFile(this, 'inputJs', 'js')"></label>
+                        <button class="btn-icon hide-on-expanded" onclick="toggleExpand('boxJs')"><svg class="svg-icon" viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg></button>
+                        <button class="btn-icon show-on-expanded" onclick="toggleExpand('boxJs')"><svg class="svg-icon" viewBox="0 0 24 24"><path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/></svg></button>
+                    </div>
                 </div>
-                <textarea id="inputJs" placeholder="/* 貼上 JS 邏輯 */"></textarea>
+                <textarea id="inputJs" placeholder="// 在此輸入 JavaScript..."></textarea>
             </div>
         </div>
 
         <div class="output-side">
-            <div class="glass-card">
+            <div class="glass-card" id="boxOutput">
                 <div class="card-header">
                     <span><i class="fas fa-code"></i> 合成代碼</span>
-                    <button class="btn-upload" onclick="copyCode()">
-                        <svg class="svg-icon" viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
-                        點擊複製
-                    </button>
+                    <div class="header-btns">
+                        <button class="btn-upload" onclick="copyCode()"><svg class="svg-icon" viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg> 複製</button>
+                        <button class="btn-icon hide-on-expanded" onclick="toggleExpand('boxOutput')"><svg class="svg-icon" viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg></button>
+                        <button class="btn-icon show-on-expanded" onclick="toggleExpand('boxOutput')"><svg class="svg-icon" viewBox="0 0 24 24"><path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/></svg></button>
+                    </div>
                 </div>
                 <textarea id="outputCode" readonly style="color: #a9b7c6; background: rgba(0,0,0,0.3);"></textarea>
             </div>
 
-            <div class="glass-card">
+            <div class="glass-card" id="boxPreview">
                 <div class="card-header">
                     <span><i class="fas fa-eye"></i> 即時預覽</span>
+                    <div class="header-btns">
+                        <button class="btn-icon hide-on-expanded" onclick="toggleExpand('boxPreview')"><svg class="svg-icon" viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg></button>
+                        <button class="btn-icon show-on-expanded" onclick="toggleExpand('boxPreview')"><svg class="svg-icon" viewBox="0 0 24 24"><path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/></svg></button>
+                    </div>
                 </div>
                 <iframe id="previewFrame"></iframe>
             </div>
@@ -248,9 +246,12 @@
     </div>
 
     <script>
+        function toggleExpand(id) {
+            document.getElementById(id).classList.toggle('expanded');
+        }
+
         function updateUI() {
-            const sections = ['Html', 'Css', 'Js'];
-            sections.forEach(s => {
+            ['Html', 'Css', 'Js'].forEach(s => {
                 document.getElementById(`box${s}`).classList.toggle('disabled', !document.getElementById(`check${s}`).checked);
             });
         }
@@ -266,39 +267,20 @@
                     if (match) content = match[1].trim();
                 }
                 document.getElementById(targetId).value = content;
-                input.value = ''; // 清除 value 讓同一檔案可重複上傳
+                input.value = '';
             };
             reader.readAsText(file);
         }
 
         function runMerge() {
-            const useHtml = document.getElementById('checkHtml').checked;
-            const useCss = document.getElementById('checkCss').checked;
-            const useJs = document.getElementById('checkJs').checked;
-
-            const html = useHtml ? document.getElementById('inputHtml').value : "";
-            const css = useCss ? document.getElementById('inputCss').value : "";
-            const js = useJs ? document.getElementById('inputJs').value : "";
-
-            const finalCode = `<!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>${css}<\/style>
-</head>
-<body>
-${html}
-<script>${js}<\/script>
-</body>
-</html>`;
-
+            const html = document.getElementById('checkHtml').checked ? document.getElementById('inputHtml').value : "";
+            const css = document.getElementById('checkCss').checked ? document.getElementById('inputCss').value : "";
+            const js = document.getElementById('checkJs').checked ? document.getElementById('inputJs').value : "";
+            const finalCode = `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><style>${css}<\/style></head><body>${html}<script>${js}<\/script></body></html>`;
             document.getElementById('outputCode').value = finalCode;
             const frame = document.getElementById('previewFrame');
             const doc = frame.contentDocument || frame.contentWindow.document;
-            doc.open();
-            doc.write(finalCode);
-            doc.close();
+            doc.open(); doc.write(finalCode); doc.close();
         }
 
         function copyCode() {
@@ -306,9 +288,8 @@ ${html}
             if (!output.value) return;
             output.select();
             document.execCommand('copy');
-            alert("代碼已複製到剪貼簿！");
+            alert("已複製到剪貼簿！");
         }
-
         updateUI();
     </script>
 </body>
