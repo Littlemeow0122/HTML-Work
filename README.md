@@ -2,7 +2,7 @@
 [Littlemeow0122/HTML-Work](https://github.com/Littlemeow0122/HTML-Work/tree/main)  
 * `創建日期: 2025/12/15`
 * `更新日期: 2026/2/11`
-* `版本: 5.0`
+* `版本: 6.0`
   
 [README.md](https://raw.githack.com/Littlemeow0122/HTML-Work/refs/heads/main/README.md.html)
 
@@ -48,7 +48,8 @@
 >**URL**: https://raw.githack.com/Littlemeow0122/HTML-Work/refs/heads/main/ASMR鍵盤.html  
 # 程式碼合成器
 >**URL**: https://raw.githack.com/Littlemeow0122/HTML-Work/refs/heads/main/程式碼合成器.html
-
+# AI照片編輯器
+>**URL**: https://raw.githack.com/Littlemeow0122/HTML-Work/refs/heads/main/AI%E7%85%A7%E7%89%87%E7%B7%A8%E8%BC%AF%E5%99%A8.html
 ---
 
 其他網頁:
