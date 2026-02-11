@@ -32,7 +32,6 @@
             overflow: hidden;
         }
 
-        /* 頂部標題與控制欄 */
         header {
             display: flex;
             justify-content: space-between;
@@ -52,6 +51,7 @@
             border-radius: 50px;
             border: 1px solid var(--border-color);
             backdrop-filter: blur(10px);
+            align-items: center;
         }
 
         .checkbox-item {
@@ -62,7 +62,6 @@
             font-size: 0.9rem;
         }
 
-        /* 核心佈局 */
         .main-layout {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -83,7 +82,6 @@
             gap: 15px;
         }
 
-        /* 卡片樣式 */
         .glass-card {
             background: var(--card-bg);
             border: 1px solid var(--border-color);
@@ -105,7 +103,6 @@
             text-transform: uppercase;
         }
 
-        /* 狀態切換：禁用時 */
         .disabled {
             opacity: 0.2;
             filter: grayscale(1) blur(2px);
@@ -113,7 +110,6 @@
             transform: scale(0.98);
         }
 
-        /* 輸入框 */
         textarea {
             flex: 1;
             background: transparent;
@@ -127,7 +123,6 @@
             line-height: 1.6;
         }
 
-        /* 按鈕美化 */
         .btn-action {
             background: linear-gradient(to right, var(--accent-primary), var(--accent-secondary));
             border: none;
@@ -137,6 +132,9 @@
             font-weight: bold;
             cursor: pointer;
             box-shadow: 0 4px 15px rgba(79, 172, 254, 0.4);
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .btn-action:hover {
@@ -150,11 +148,19 @@
             border-radius: 4px;
             font-size: 0.7rem;
             cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
         }
 
         .btn-upload:hover { background: rgba(255, 255, 255, 0.2); }
 
-        /* 預覽窗 */
+        .svg-icon {
+            width: 14px;
+            height: 14px;
+            fill: currentColor;
+        }
+
         iframe {
             width: 100%;
             height: 100%;
@@ -162,10 +168,8 @@
             background: #fff;
         }
 
-        /* 捲軸美化 */
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 10px; }
-
     </style>
 </head>
 <body>
@@ -177,7 +181,8 @@
             <label class="checkbox-item"><input type="checkbox" id="checkCss" checked onchange="updateUI()"> CSS</label>
             <label class="checkbox-item"><input type="checkbox" id="checkJs" checked onchange="updateUI()"> JS</label>
             <button class="btn-action" onclick="runMerge()">
-                <i class="fas fa-bolt"></i> 合成並預覽
+                <svg class="svg-icon" viewBox="0 0 24 24"><path d="M13 10V3L4 14H11V21L20 10H13Z"/></svg>
+                合成並預覽
             </button>
         </div>
     </header>
@@ -187,7 +192,11 @@
             <div class="glass-card" id="boxHtml">
                 <div class="card-header" style="border-left: 4px solid var(--html-color);">
                     <span><i class="fab fa-html5"></i> HTML Body</span>
-                    <label class="btn-upload"><i class="fas fa-upload"></i> 上傳<input type="file" hidden accept=".html" onchange="loadFile(this, 'inputHtml', 'html')"></label>
+                    <label class="btn-upload">
+                        <svg class="svg-icon" viewBox="0 0 24 24"><path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z"/></svg>
+                        上傳
+                        <input type="file" hidden accept=".html,.htm,.txt" onchange="loadFile(this, 'inputHtml', 'html')">
+                    </label>
                 </div>
                 <textarea id="inputHtml" placeholder="/* 貼上 HTML 結構 */"></textarea>
             </div>
@@ -195,7 +204,11 @@
             <div class="glass-card" id="boxCss">
                 <div class="card-header" style="border-left: 4px solid var(--css-color);">
                     <span><i class="fab fa-css3-alt"></i> CSS Styles</span>
-                    <label class="btn-upload"><i class="fas fa-upload"></i> 上傳<input type="file" hidden accept=".css" onchange="loadFile(this, 'inputCss', 'css')"></label>
+                    <label class="btn-upload">
+                        <svg class="svg-icon" viewBox="0 0 24 24"><path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z"/></svg>
+                        上傳
+                        <input type="file" hidden accept=".css,.txt" onchange="loadFile(this, 'inputCss', 'css')">
+                    </label>
                 </div>
                 <textarea id="inputCss" placeholder="/* 貼上 CSS 樣式 */"></textarea>
             </div>
@@ -203,7 +216,11 @@
             <div class="glass-card" id="boxJs">
                 <div class="card-header" style="border-left: 4px solid var(--js-color);">
                     <span><i class="fab fa-js"></i> JavaScript</span>
-                    <label class="btn-upload"><i class="fas fa-upload"></i> 上傳<input type="file" hidden accept=".js" onchange="loadFile(this, 'inputJs', 'js')"></label>
+                    <label class="btn-upload">
+                        <svg class="svg-icon" viewBox="0 0 24 24"><path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z"/></svg>
+                        上傳
+                        <input type="file" hidden accept=".js,.txt,application/javascript,text/javascript" onchange="loadFile(this, 'inputJs', 'js')">
+                    </label>
                 </div>
                 <textarea id="inputJs" placeholder="/* 貼上 JS 邏輯 */"></textarea>
             </div>
@@ -213,13 +230,18 @@
             <div class="glass-card">
                 <div class="card-header">
                     <span><i class="fas fa-code"></i> 合成代碼</span>
-                    <button class="btn-upload" onclick="copyCode()"><i class="fas fa-copy"></i> 點擊複製</button>
+                    <button class="btn-upload" onclick="copyCode()">
+                        <svg class="svg-icon" viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+                        點擊複製
+                    </button>
                 </div>
                 <textarea id="outputCode" readonly style="color: #a9b7c6; background: rgba(0,0,0,0.3);"></textarea>
             </div>
 
             <div class="glass-card">
-                <div class="card-header"><span><i class="fas fa-eye"></i> 即時預覽</span></div>
+                <div class="card-header">
+                    <span><i class="fas fa-eye"></i> 即時預覽</span>
+                </div>
                 <iframe id="previewFrame"></iframe>
             </div>
         </div>
@@ -227,9 +249,10 @@
 
     <script>
         function updateUI() {
-            document.getElementById('boxHtml').classList.toggle('disabled', !document.getElementById('checkHtml').checked);
-            document.getElementById('boxCss').classList.toggle('disabled', !document.getElementById('checkCss').checked);
-            document.getElementById('boxJs').classList.toggle('disabled', !document.getElementById('checkJs').checked);
+            const sections = ['Html', 'Css', 'Js'];
+            sections.forEach(s => {
+                document.getElementById(`box${s}`).classList.toggle('disabled', !document.getElementById(`check${s}`).checked);
+            });
         }
 
         function loadFile(input, targetId, type) {
@@ -243,6 +266,7 @@
                     if (match) content = match[1].trim();
                 }
                 document.getElementById(targetId).value = content;
+                input.value = ''; // 清除 value 讓同一檔案可重複上傳
             };
             reader.readAsText(file);
         }
@@ -257,9 +281,10 @@
             const js = useJs ? document.getElementById('inputJs').value : "";
 
             const finalCode = `<!DOCTYPE html>
-<html>
+<html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>${css}<\/style>
 </head>
 <body>
@@ -271,11 +296,14 @@ ${html}
             document.getElementById('outputCode').value = finalCode;
             const frame = document.getElementById('previewFrame');
             const doc = frame.contentDocument || frame.contentWindow.document;
-            doc.open(); doc.write(finalCode); doc.close();
+            doc.open();
+            doc.write(finalCode);
+            doc.close();
         }
 
         function copyCode() {
             const output = document.getElementById('outputCode');
+            if (!output.value) return;
             output.select();
             document.execCommand('copy');
             alert("代碼已複製到剪貼簿！");
