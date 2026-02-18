@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>電視模擬</title>
+    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #a0aec0;
+            --tv-frame: #fdfdfd;
+            --remote-gray: #2d3748;
+            --osd-white: #ffffff;
+        }
+
+        body { 
+            background: var(--bg-color); 
+            font-family: 'VT323', monospace; 
+            margin: 0; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            padding: 20px;
+            overflow: hidden; 
+            user-select: none;
+            touch-action: none;
+        }
+
+        .tv-unit {
+            width: 80vw;
+            max-width: 700px;
+            background: var(--tv-frame);
+            padding: 15px;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            position: relative;
+            z-index: 1;
+        }
+
+        .screen {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            background: #000;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .osd-text {
+            position: absolute;
+            top: 10%;
+            color: var(--osd-white); 
+            font-size: 45px;
+            text-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+            z-index: 250;
+            display: none;
+            pointer-events: none;
+        }
+        #osd-left { left: 8%; }
+        #osd-right { right: 8%; }
+
+        .touch-barrier { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 200; }
+        #player { width: 100%; height: 100%; }
+
+        #noSignalContainer, #tvBlackout {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; z-index: 150; display: none;
+        }
+
+        .set-top-box {
+            width: 220px; height: 35px; background: #fff;
+            margin-top: 10px; border-radius: 4px;
+            display: flex; align-items: center; justify-content: flex-end; padding: 0 20px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        .box-led { width: 8px; height: 8px; background: #333; border-radius: 50%; }
+
+        .remote {
+            width: 180px;
+            background: var(--remote-gray);
+            padding: 30px 15px;
+            border-radius: 40px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            align-items: center;
+            box-shadow: 10px 20px 50px rgba(0,0,0,0.5);
+            position: absolute; 
+            top: 60%;
+            left: 50%;
+            transform: translateX(-50%);
+            cursor: grab;
+            z-index: 1000;
+            border: 2px solid #1a202c;
+            touch-action: none;
+        }
+
+        .ir-led { width: 10px; height: 10px; background: #1a202c; border-radius: 50%; }
+        .ir-active { background: #ff1744; box-shadow: 0 0 10px #ff1744; }
+
+        .btn-row { display: flex; gap: 12px; width: 100%; justify-content: center; align-items: center; }
+        .btn {
+            border: 1px solid rgba(0,0,0,0.5); border-radius: 8px;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            transition: transform 0.05s; box-shadow: 0 4px 0 rgba(0,0,0,0.4);
+            background: #edf2f7;
+            font-family: Arial, sans-serif;
+            font-weight: bold;
+        }
+        .btn:active { transform: translateY(2px); box-shadow: none; }
+        .btn svg { fill: currentColor; }
+
+        .pwr-tv { background: #e53e3e; color: white; width: 60px; height: 40px; }
+        .pwr-box { background: #718096; color: white; width: 60px; height: 40px; }
+        .btn-play { background: #2b6cb0; color: white; width: 130px; height: 45px; }
+        
+        /* 功能按鈕行 */
+        .btn-replay { background: #f56565; color: white; width: 65px; height: 35px; }
+        .btn-replay svg { width: 18px; height: 18px; }
+        
+        .btn-cc { background: #ecc94b; color: #1a202c; width: 65px; height: 35px; font-size: 16px; }
+
+        .btn-seek { color: #1a202c; width: 60px; height: 40px; }
+
+        .url-area { display: flex; flex-direction: column; align-items: center; gap: 5px; width: 100%; }
+        .url-label { color: #fff; font-size: 14px; font-weight: bold; }
+        .url-input { 
+            background: #1a202c; color: #fff; border: none; width: 120px; 
+            padding: 8px; border-radius: 5px; text-align: center; 
+            font-size: 14px; outline: none; font-family: 'VT323'; 
+        }
+    </style>
+</head>
+<body>
+
+    <div class="tv-unit">
+        <div class="screen" id="screen">
+            <div id="osd-left" class="osd-text"></div>
+            <div id="osd-right" class="osd-text"></div>
+            <div class="touch-barrier"></div>
+            <div id="noSignalContainer">
+                <div id="noSignalText" style="position:absolute; color:#ffffff; font-family:'VT323'; font-size:30px; border:2px solid #ffffff; padding:5px 15px;">NO SIGNAL</div>
+            </div>
+            <div id="tvBlackout"></div>
+            <div id="player"></div>
+        </div>
+    </div>
+
+    <div class="set-top-box">
+        <div id="boxLed" class="box-led"></div>
+    </div>
+
+    <div class="remote" id="draggableRemote">
+        <div id="remoteLed" class="ir-led"></div>
+        
+        <div class="btn-row">
+            <button class="btn pwr-tv" onclick="toggleTv()"><svg viewBox="0 0 24 24" width="24" height="24"><path d="M16.56,5.44L15.11,6.89C16.84,7.94 18,9.83 18,12A6,6 0 0,1 12,18A6,6 0 0,1 6,12C6,9.83 7.16,7.94 8.88,6.88L7.44,5.44C5.36,6.95 4,9.32 4,12A8,8 0 0,0 12,20A8,8 0 0,0 20,12C20,9.32 18.64,6.95 16.56,5.44M13,3H11V13H13V3Z"/></svg></button>
+            <button class="btn pwr-box" onclick="toggleBox()"><svg viewBox="0 0 24 24" width="24" height="24"><path d="M21,16.5C21,16.88 20.79,17.21 20.47,17.38L12.57,21.82C12.41,21.94 12.21,22 12,22C11.79,22 11.59,21.94 11.43,21.82L3.53,17.38C3.21,17.21 3,16.88 3,16.5V7.5C3,7.12 3.21,6.79 3.53,6.62L11.43,2.18C11.59,2.06 11.79,2 12,2C12.21,2 12.41,2.06 12.57,2.18L20.47,6.62C20.79,6.79 21,7.12 21,7.5V16.5Z"/></svg></button>
+        </div>
+
+        <button class="btn btn-play" onclick="pressPlay()">
+            <svg id="playIcon" viewBox="0 0 24 24" width="24" height="24"><path d="M8,5.14V19.14L19,12.14L8,5.14Z"/></svg>
+        </button>
+
+        <div class="btn-row">
+            <button class="btn btn-replay" onclick="pressReplay()" title="Replay">
+                <svg viewBox="0 0 24 24"><path d="M12,5V1L7,6L12,11V7A5,5 0 0,1 17,12A5,5 0 0,1 12,17A5,5 0 0,1 7,12H5A7,7 0 0,0 12,19A7,7 0 0,0 19,12A7,7 0 0,0 12,5Z"/></svg>
+            </button>
+            <button class="btn btn-cc" onclick="toggleCC()">CC</button>
+        </div>
+
+        <div class="btn-row">
+            <button class="btn btn-seek" onclick="pressSeek(-5)"><svg viewBox="0 0 24 24" width="24" height="24"><path d="M11,18V6L2.5,12L11,18M11.5,12L20,18V6L11.5,12Z"/></svg></button>
+            <button class="btn btn-seek" onclick="pressSeek(5)"><svg viewBox="0 0 24 24" width="24" height="24"><path d="M13,6V18L21.5,12L13,6M4,18L12.5,12L4,6V18Z"/></svg></button>
+        </div>
+
+        <div class="url-area">
+            <div class="url-label">YouTube URL</div>
+            <input type="text" id="urlIn" class="url-input" placeholder="...">
+        </div>
+    </div>
+
+    <script src="https://www.youtube.com/iframe_api"></script>
+
+    <script>
+        let player, tvOn = true, boxOn = true, ccOn = false, nx = 0, ny = 0, ndx = 1.5, ndy = 1.5, seekTotal = 0, osdTimer = null;
+
+        // 拖動邏輯
+        const remote = document.getElementById('draggableRemote');
+        let isDragging = false, startX, startY;
+        function onStart(e) {
+            if (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT' || e.target.closest('svg')) return;
+            isDragging = true;
+            const clientX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
+            const clientY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
+            startX = clientX - remote.offsetLeft;
+            startY = clientY - remote.offsetTop;
+            remote.style.transform = 'none';
+        }
+        function onMove(e) {
+            if (!isDragging) return;
+            const clientX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
+            const clientY = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY;
+            remote.style.left = (clientX - startX) + 'px';
+            remote.style.top = (clientY - startY) + 'px';
+        }
+        function onEnd() { isDragging = false; }
+
+        remote.addEventListener('mousedown', onStart);
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup', onEnd);
+        remote.addEventListener('touchstart', onStart, {passive: true});
+        document.addEventListener('touchmove', onMove, {passive: false});
+        document.addEventListener('touchend', onEnd);
+
+        // API Ready
+        function onYouTubeIframeAPIReady() {
+            player = new YT.Player('player', {
+                videoId: 'dQw4w9WgXcQ',
+                playerVars: { 'controls': 0, 'disablekb': 1, 'modestbranding': 1, 'rel': 0, 'cc_load_policy': 0 }
+            });
+        }
+
+        // CC 字幕開關
+        function toggleCC() {
+            if (tvOn && boxOn) {
+                remoteBlink();
+                ccOn = !ccOn;
+                if (ccOn) {
+                    player.loadModule('captions');
+                    player.setOption('captions', 'track', {'languageCode': 'zh-Hant'}); // 預設嘗試繁體
+                    showOSD('CC: ON', 'right');
+                } else {
+                    player.unloadModule('captions');
+                    showOSD('CC: OFF', 'right');
+                }
+            }
+        }
+
+        function pressReplay() {
+            if (tvOn && boxOn) {
+                remoteBlink();
+                player.seekTo(0);
+                player.playVideo();
+                showOSD('REPLAY', 'right');
+            }
+        }
+
+        function showOSD(text, side) {
+            clearTimeout(osdTimer);
+            const el = side === 'left' ? document.getElementById('osd-left') : document.getElementById('osd-right');
+            const other = side === 'left' ? document.getElementById('osd-right') : document.getElementById('osd-left');
+            other.style.display = 'none';
+            el.innerText = text;
+            el.style.display = 'block';
+            osdTimer = setTimeout(() => { el.style.display = 'none'; }, 1000);
+        }
+
+        function remoteBlink() {
+            const led = document.getElementById('remoteLed');
+            led.classList.add('ir-active');
+            setTimeout(() => led.classList.remove('ir-active'), 150);
+        }
+
+        function toggleTv() {
+            remoteBlink();
+            tvOn = !tvOn;
+            document.getElementById('tvBlackout').style.display = tvOn ? 'none' : 'block';
+            if (!tvOn) player.pauseVideo();
+        }
+
+        function toggleBox() {
+            remoteBlink();
+            boxOn = !boxOn;
+            if (!boxOn) player.pauseVideo();
+            else if (tvOn) player.playVideo();
+        }
+
+        function pressPlay() {
+            if (tvOn && boxOn) {
+                remoteBlink();
+                const state = player.getPlayerState();
+                if (state === 1) {
+                    player.pauseVideo();
+                    document.getElementById('playIcon').innerHTML = '<path d="M8,5.14V19.14L19,12.14L8,5.14Z"/>';
+                } else {
+                    player.playVideo();
+                    document.getElementById('playIcon').innerHTML = '<path d="M14,19H18V5H14M6,19H10V5H6V19Z"/>';
+                }
+            }
+        }
+
+        function pressSeek(s) {
+            if (tvOn && boxOn) {
+                remoteBlink();
+                player.seekTo(player.getCurrentTime() + s, true);
+                seekTotal = (Math.sign(s) !== Math.sign(seekTotal)) ? s : seekTotal + s;
+                const text = s < 0 ? `${Math.abs(seekTotal)}s <<` : `>> ${Math.abs(seekTotal)}s`;
+                showOSD(text, s < 0 ? 'left' : 'right');
+            }
+        }
+
+        setInterval(() => {
+            if (boxOn) {
+                const bled = document.getElementById('boxLed');
+                bled.style.background = '#ffd700';
+                bled.style.boxShadow = '0 0 10px #ffd700';
+                setTimeout(() => { bled.style.background = '#333'; bled.style.boxShadow = 'none'; }, 250);
+            }
+        }, 2000);
+
+        function animate() {
+            const container = document.getElementById('noSignalContainer');
+            const text = container.querySelector('#noSignalText');
+            const screen = document.getElementById('screen');
+            if (!boxOn && tvOn) {
+                container.style.display = 'block';
+                nx += ndx; ny += ndy;
+                if (nx + text.offsetWidth >= screen.offsetWidth || nx <= 0) ndx *= -1;
+                if (ny + text.offsetHeight >= screen.offsetHeight || ny <= 0) ndy *= -1;
+                text.style.left = nx + 'px'; text.style.top = ny + 'px';
+            } else { container.style.display = 'none'; }
+            requestAnimationFrame(animate);
+        }
+        animate();
+
+        document.getElementById('urlIn').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && tvOn && boxOn) {
+                remoteBlink();
+                const reg = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+                const m = this.value.match(reg);
+                if (m && m[2].length==11) player.loadVideoById(m[2]);
+                this.blur();
+            }
+        });
+    </script>
+</body>
+</html>
